@@ -8,6 +8,18 @@ import (
    "strings"
 )
 
+func (r Request) Body_Bytes(b []byte) {
+   body := bytes.NewReader(b)
+   r.Body = io.NopCloser(body)
+   r.ContentLength = body.Size()
+}
+
+func (r Request) Body_String(s string) {
+   body := strings.NewReader(s)
+   r.Body = io.NopCloser(body)
+   r.ContentLength = body.Size()
+}
+
 type Request struct {
    *http.Request
 }
@@ -53,12 +65,4 @@ func Post_URL(ref string) (*Request, error) {
 
 func Put() *Request {
    return New_Request(http.MethodPut, new(url.URL))
-}
-
-func (r Request) Body_Bytes(b []byte) {
-   r.Body = io.NopCloser(bytes.NewReader(b))
-}
-
-func (r Request) Body_String(s string) {
-   r.Body = io.NopCloser(strings.NewReader(s))
 }

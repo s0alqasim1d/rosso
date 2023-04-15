@@ -2,41 +2,47 @@ package http
 
 import (
    "net/http"
+   "os"
    "testing"
 )
 
-func do() error {
-   c := Default_Client
-   c.CheckRedirect = nil
-   c.Log_Level = 9
-   c.Transport = new(http.Transport)
-   c.Status = 201
-   req := Get()
-   req.URL.Scheme = "http"
-   req.URL.Host = "httpbin.org"
-   req.URL.Path = "/status/201"
-   res, err := c.Do(req)
-   if err != nil {
-      return err
-   }
-   return res.Body.Close()
-}
-
-func Test_Client(t *testing.T) {
-   err := do()
+func Test_URL(t *testing.T) {
+   req, err := Get_URL("http://httpbin.org/get")
    if err != nil {
       t.Fatal(err)
    }
-   if Default_Client.CheckRedirect == nil {
-      t.Fatal("CheckRedirect")
+   res, err := new(http.Transport).RoundTrip(req.Request)
+   if err != nil {
+      t.Fatal(err)
    }
-   if Default_Client.Log_Level == 9 {
-      t.Fatal("Log_Level")
+   defer res.Body.Close()
+   os.Stdout.ReadFrom(res.Body)
+}
+
+func Test_Request(t *testing.T) {
+   req := Get()
+   req.URL.Scheme = "http"
+   req.URL.Host = "httpbin.org"
+   req.URL.Path = "/get"
+   Default_Client.Log_Level = 2
+   res, err := Default_Client.Do(req)
+   if err != nil {
+      t.Fatal(err)
    }
-   if Default_Client.Status == 201 {
-      t.Fatal("Status")
+   defer res.Body.Close()
+   os.Stdout.ReadFrom(res.Body)
+}
+
+func Test_Body(t *testing.T) {
+   req := Post()
+   req.Body_String("hello=world")
+   req.URL.Host = "httpbin.org"
+   req.URL.Path = "/post"
+   req.URL.Scheme = "http"
+   res, err := new(http.Transport).RoundTrip(req.Request)
+   if err != nil {
+      t.Fatal(err)
    }
-   if Default_Client.Transport != nil {
-      t.Fatal("Transport")
-   }
+   defer res.Body.Close()
+   os.Stdout.ReadFrom(res.Body)
 }

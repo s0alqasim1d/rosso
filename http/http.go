@@ -2,14 +2,10 @@ package http
 
 import (
    "2a.pages.dev/rosso/strconv"
-   "bufio"
-   "bytes"
    "fmt"
    "io"
    "net/http"
    "net/http/httputil"
-   "net/textproto"
-   "net/url"
    "os"
    "strings"
    "time"
@@ -65,46 +61,6 @@ func (c Client) Get(ref string) (*Response, error) {
       return nil, err
    }
    return c.Do(req)
-}
-
-func Read_Request(r *bufio.Reader) (*http.Request, error) {
-   var req http.Request
-   text := textproto.NewReader(r)
-   // .Method
-   raw_method_path, err := text.ReadLine()
-   if err != nil {
-      return nil, err
-   }
-   method_path := strings.Fields(raw_method_path)
-   req.Method = method_path[0]
-   // .URL
-   ref, err := url.Parse(method_path[1])
-   if err != nil {
-      return nil, err
-   }
-   req.URL = ref
-   // .URL.Host
-   head, err := text.ReadMIMEHeader()
-   if err != nil {
-      return nil, err
-   }
-   if req.URL.Host == "" {
-      req.URL.Host = head.Get("Host")
-   }
-   // .Header
-   req.Header = http.Header(head)
-   // .Body
-   buf := new(bytes.Buffer)
-   length, err := text.R.WriteTo(buf)
-   if err != nil {
-      return nil, err
-   }
-   if length >= 1 {
-      req.Body = io.NopCloser(buf)
-   }
-   // .ContentLength
-   req.ContentLength = length
-   return &req, nil
 }
 
 type Cookie = http.Cookie

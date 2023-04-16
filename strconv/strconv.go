@@ -12,11 +12,27 @@ const escape_character = '~'
 var (
    AppendInt = strconv.AppendInt
    AppendUint = strconv.AppendUint
-   CanBackquote = strconv.CanBackquote
    Quote = strconv.Quote
 )
 
 var error_escape = errors.New("invalid printable escape")
+
+// mimesniff.spec.whatwg.org#binary-data-byte
+func Binary_Data(b byte) bool {
+   if b <= 0x08 {
+      return true
+   }
+   if b == 0x0B {
+      return true
+   }
+   if b >= 0x0E && b <= 0x1A {
+      return true
+   }
+   if b >= 0x1C && b <= 0x1F {
+      return true
+   }
+   return false
+}
 
 func Encode(src []byte) string {
    var dst []byte
@@ -34,23 +50,6 @@ func Encode(src []byte) string {
       src = src[size:]
    }
    return string(dst)
-}
-
-// mimesniff.spec.whatwg.org#binary-data-byte
-func binary_data(b byte) bool {
-   if b <= 0x08 {
-      return true
-   }
-   if b == 0x0B {
-      return true
-   }
-   if b >= 0x0E && b <= 0x1A {
-      return true
-   }
-   if b >= 0x1C && b <= 0x1F {
-      return true
-   }
-   return false
 }
 
 func decode(src string) ([]byte, error) {
@@ -78,7 +77,7 @@ func decode(src string) ([]byte, error) {
 func decode_rune(p []byte) (rune, int) {
    if len(p) >= 1 {
       b := p[0]
-      if b == escape_character || binary_data(b) {
+      if b == escape_character || Binary_Data(b) {
          return utf8.RuneError, 1
       }
    }

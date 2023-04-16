@@ -14,7 +14,53 @@ import (
    "os"
    "strings"
    "text/template"
+   "unicode/utf8"
 )
+
+// go.dev/ref/spec#String_literals
+func can_backquote(s string) bool {
+   for i := range s {
+      b := s[i]
+      if b == '\r' {
+         return false
+      }
+      if b == '`' {
+         return false
+      }
+      if strconv.Binary_Data(b) {
+         return false
+      }
+   }
+   return utf8.ValidString(s)
+}
+
+func write_request(req *http.Request, dst io.Writer) error {
+   var v values
+   if req.Body != nil && req.Method != "GET" {
+      body, err := io.ReadAll(req.Body)
+      if err != nil {
+         return err
+      }
+      text := string(body)
+      if can_backquote(text) {
+         v.Raw_Req_Body = "`" + text + "`"
+      } else {
+         v.Raw_Req_Body = strconv.Quote(text)
+      }
+      v.Req_Body = "io.NopCloser(req_body)"
+      req.Body = io.NopCloser(bytes.NewReader(body))
+   } else {
+      v.Raw_Req_Body = `""`
+      v.Req_Body = "nil"
+   }
+   v.Query = req.URL.Query()
+   v.Request = req
+   temp, err := template.ParseFS(content, "_template.go")
+   if err != nil {
+      return err
+   }
+   return temp.Execute(dst, v)
+}
 
 func write(req *http.Request, dst io.Writer) error {
    res, err := new(http.Transport).RoundTrip(req)
@@ -44,34 +90,6 @@ func write(req *http.Request, dst io.Writer) error {
       }
    }
    return nil
-}
-
-func write_request(req *http.Request, dst io.Writer) error {
-   var v values
-   if req.Body != nil && req.Method != "GET" {
-      body, err := io.ReadAll(req.Body)
-      if err != nil {
-         return err
-      }
-      req.Body = io.NopCloser(bytes.NewReader(body))
-      v.Req_Body = "io.NopCloser(req_body)"
-      str := string(body)
-      if strconv.CanBackquote(str) {
-         v.Raw_Req_Body = "`" + str + "`"
-      } else {
-         v.Raw_Req_Body = strconv.Quote(str)
-      }
-   } else {
-      v.Raw_Req_Body = `""`
-      v.Req_Body = "nil"
-   }
-   v.Query = req.URL.Query()
-   v.Request = req
-   temp, err := template.ParseFS(content, "_template.go")
-   if err != nil {
-      return err
-   }
-   return temp.Execute(dst, v)
 }
 
 func read_request(r *bufio.Reader) (*http.Request, error) {

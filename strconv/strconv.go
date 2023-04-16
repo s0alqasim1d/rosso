@@ -12,6 +12,7 @@ const escape_character = '~'
 var (
    AppendInt = strconv.AppendInt
    AppendUint = strconv.AppendUint
+   CanBackquote = strconv.CanBackquote
    Quote = strconv.Quote
 )
 

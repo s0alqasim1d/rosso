@@ -1,21 +1,12 @@
-package tls
+package main
 
 import (
    "bufio"
    "crypto/tls"
-   "fmt"
    "net"
    "net/http"
-   "net/url"
-   "strings"
-   "testing"
+   "os"
 )
-
-func Test_Unmarshal(t *testing.T) {
-   var hello Client_Hello_Msg
-   err := hello.UnmarshalBinary(android_client_hello[5:])
-   fmt.Printf("%v %#v\n", err, hello)
-}
 
 // Android_API
 //                   0   1   2   3   4
@@ -34,43 +25,25 @@ type conn struct {
    net.Conn
 }
 
-func Test_Android(t *testing.T) {
-   // http.Request
-   body := url.Values{
-      "Email": {email},
-      "Passwd": {passwd},
-      "client_sig": {""},
-      "droidguard_results": {"-"},
-   }.Encode()
-   req, err := http.NewRequest(
-      "POST", "https://android.googleapis.com/auth",
-      strings.NewReader(body),
-   )
+func main() {
+   req, err := http.NewRequest("GET", "https://mail.google.com", nil)
    if err != nil {
-      t.Fatal(err)
+      panic(err)
    }
-   req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-   dial_conn, err := net.Dial("tcp", "android.googleapis.com:443")
+   dial_conn, err := net.Dial("tcp", "mail.google.com:443")
    if err != nil {
-      t.Fatal(err)
+      panic(err)
    }
-   tls_conn := tls.Client(
-      &conn{Conn: dial_conn}, &tls.Config{ServerName: "android.googleapis.com"},
-   )
+   config := tls.Config{ServerName: "mail.google.com"}
+   tls_conn := tls.Client(&conn{Conn: dial_conn}, &config)
+   defer tls_conn.Close()
    if err := req.Write(tls_conn); err != nil {
-      t.Fatal(err)
+      panic(err)
    }
    res, err := http.ReadResponse(bufio.NewReader(tls_conn), nil)
    if err != nil {
-      t.Fatal(err)
+      panic(err)
    }
-   if err := tls_conn.Close(); err != nil {
-      t.Fatal(err)
-   }
-   if err := res.Body.Close(); err != nil {
-      t.Fatal(err)
-   }
-   if res.StatusCode != http.StatusOK {
-      t.Fatal(res)
-   }
+   defer res.Body.Close()
+   os.Stdout.ReadFrom(res.Body)
 }

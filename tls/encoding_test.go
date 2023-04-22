@@ -12,7 +12,7 @@ import (
 func Test_UnmarshalText(t *testing.T) {
    body := url.Values{
       "Email": {email},
-      "Passwd": {password},
+      "Passwd": {passwd},
       "client_sig": {""},
       "droidguard_results": {"-"},
    }.Encode()

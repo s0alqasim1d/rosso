@@ -13,5 +13,5 @@ require (
 	github.com/gaukas/godicttls v0.0.3 // indirect
 	github.com/klauspost/compress v1.16.5 // indirect
 	golang.org/x/crypto v0.8.0 // indirect
-	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/sys v0.8.0 // indirect
 )

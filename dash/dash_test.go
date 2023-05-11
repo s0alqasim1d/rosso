@@ -11,15 +11,12 @@ import (
 
 func Test_Info(t *testing.T) {
    for _, name := range tests {
-      file, err := os.Open(name)
+      data, err := os.ReadFile(name)
       if err != nil {
          t.Fatal(err)
       }
       var pre Presentation
-      if err := xml.NewDecoder(file).Decode(&pre); err != nil {
-         t.Fatal(err)
-      }
-      if err := file.Close(); err != nil {
+      if err := xml.Unmarshal(data, &pre); err != nil {
          t.Fatal(err)
       }
       fmt.Println(name)
@@ -42,15 +39,12 @@ var tests = []string{
 }
 
 func Test_Media(t *testing.T) {
-   file, err := os.Open("mpd/roku.mpd")
+   data, err := os.ReadFile("mpd/roku.mpd")
    if err != nil {
       t.Fatal(err)
    }
    var pre Presentation
-   if err := xml.NewDecoder(file).Decode(&pre); err != nil {
-      t.Fatal(err)
-   }
-   if err := file.Close(); err != nil {
+   if err := xml.Unmarshal(data, &pre); err != nil {
       t.Fatal(err)
    }
    base, err := http.NewRequest("", "http://example.com", nil)
@@ -69,15 +63,12 @@ func Test_Media(t *testing.T) {
 
 func Test_Audio(t *testing.T) {
    for _, name := range tests {
-      file, err := os.Open(name)
+      data, err := os.ReadFile(name)
       if err != nil {
          t.Fatal(err)
       }
       var pre Presentation
-      if err := xml.NewDecoder(file).Decode(&pre); err != nil {
-         t.Fatal(err)
-      }
-      if err := file.Close(); err != nil {
+      if err := xml.Unmarshal(data, &pre); err != nil {
          t.Fatal(err)
       }
       reps := pre.Representation().Audio()
@@ -106,15 +97,12 @@ func Test_Audio(t *testing.T) {
 
 func Test_Video(t *testing.T) {
    for _, name := range tests {
-      file, err := os.Open(name)
+      data, err := os.ReadFile(name)
       if err != nil {
          t.Fatal(err)
       }
       var pre Presentation
-      if err := xml.NewDecoder(file).Decode(&pre); err != nil {
-         t.Fatal(err)
-      }
-      if err := file.Close(); err != nil {
+      if err := xml.Unmarshal(data, &pre); err != nil {
          t.Fatal(err)
       }
       reps := pre.Representation().Video()
@@ -131,15 +119,12 @@ func Test_Video(t *testing.T) {
 
 func Test_Ext(t *testing.T) {
    for _, name := range tests {
-      file, err := os.Open(name)
+      data, err := os.ReadFile(name)
       if err != nil {
          t.Fatal(err)
       }
       var pre Presentation
-      if err := xml.NewDecoder(file).Decode(&pre); err != nil {
-         t.Fatal(err)
-      }
-      if err := file.Close(); err != nil {
+      if err := xml.Unmarshal(data, &pre); err != nil {
          t.Fatal(err)
       }
       fmt.Println(name)

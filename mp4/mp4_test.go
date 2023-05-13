@@ -34,18 +34,18 @@ func Test_Decrypt(t *testing.T) {
       }
       defer file.Close()
       dec := New_Decrypt(file)
-      buf, err := os.ReadFile(test.enc)
+      data, err := os.ReadFile(test.enc)
       if err != nil {
          t.Fatal(err)
       }
-      if err := dec.Init(bytes.NewReader(buf)); err != nil {
+      if err := dec.Init(bytes.NewReader(data)); err != nil {
          t.Fatal(err)
       }
       key, err := hex.DecodeString(test.key)
       if err != nil {
          t.Fatal(err)
       }
-      if err := dec.Segment(bytes.NewReader(buf), key); err != nil {
+      if err := dec.Segment(bytes.NewReader(data), key); err != nil {
          t.Fatal(err)
       }
    }

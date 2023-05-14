@@ -9,43 +9,46 @@ import (
 )
 
 type test_type struct {
+   dec_path string
+   enc_path string
    key string
-   enc string
-   dec string
 }
 
 var tests = []test_type{
    {
+      "ignore/dec-piff.mp4",
+      "ignore/enc-piff.mp4",
       "680a46ebd6cf2b9a6a0b05a24dcf944a",
-      "ignore/enc-piff.mp4", "ignore/dec-piff.mp4",
-   },
-   {
+   }, {
+      "ignore/dec-cbcs.mp4",
+      "ignore/enc-cbcs.mp4",
       "22bdb0063805260307ee5045c0f3835a",
-      "ignore/enc-cbcs.mp4", "ignore/dec-cbcs.mp4",
    },
 }
 
 func Test_Decrypt(t *testing.T) {
    for _, test := range tests {
-      fmt.Println(test.enc)
-      file, err := os.Create(test.dec)
+      fmt.Println(test.enc_path)
+      enc_data, err := os.ReadFile(test.enc_path)
       if err != nil {
-         t.Fatal(err)
-      }
-      defer file.Close()
-      dec := New_Decrypt(file)
-      data, err := os.ReadFile(test.enc)
-      if err != nil {
-         t.Fatal(err)
-      }
-      if err := dec.Init(bytes.NewReader(data)); err != nil {
          t.Fatal(err)
       }
       key, err := hex.DecodeString(test.key)
       if err != nil {
          t.Fatal(err)
       }
-      if err := dec.Segment(bytes.NewReader(data), key); err != nil {
+      var dec_data bytes.Buffer
+      dec := New_Decrypt(&dec_data)
+      err = dec.Init(bytes.NewReader(enc_data))
+      if err != nil {
+         t.Fatal(err)
+      }
+      err = dec.Segment(bytes.NewReader(enc_data), key)
+      if err != nil {
+         t.Fatal(err)
+      }
+      err = os.WriteFile(test.dec_path, dec_data.Bytes(), 0666)
+      if err != nil {
          t.Fatal(err)
       }
    }

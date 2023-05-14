@@ -2,6 +2,7 @@ package http
 
 import (
    "net/http"
+   "net/url"
    "testing"
 )
 
@@ -11,10 +12,11 @@ func do() error {
    c.Log_Level = 9
    c.Transport = new(http.Transport)
    c.Status = 201
-   req := Get()
-   req.URL.Scheme = "http"
-   req.URL.Host = "httpbin.org"
-   req.URL.Path = "/status/201"
+   req := Get(&url.URL{
+      Scheme: "http",
+      Host: "httpbin.org",
+      Path: "/status/201",
+   })
    res, err := c.Do(req)
    if err != nil {
       return err

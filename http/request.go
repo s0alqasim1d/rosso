@@ -8,27 +8,15 @@ import (
    "strings"
 )
 
-func (r Request) Body_Bytes(b []byte) {
-   body := bytes.NewReader(b)
-   r.Body = io.NopCloser(body)
-   r.ContentLength = body.Size()
-}
-
-func (r Request) Body_String(s string) {
-   body := strings.NewReader(s)
-   r.Body = io.NopCloser(body)
-   r.ContentLength = body.Size()
-}
-
 type Request struct {
    *http.Request
 }
 
-func Get() *Request {
-   return New_Request(http.MethodGet, new(url.URL))
+func Get(ref *url.URL) *Request {
+   return New_Request(http.MethodGet, ref)
 }
 
-func Get_URL(ref string) (*Request, error) {
+func Get_Parse(ref string) (*Request, error) {
    href, err := url.Parse(ref)
    if err != nil {
       return nil, err
@@ -47,15 +35,15 @@ func New_Request(method string, ref *url.URL) *Request {
    return &Request{&req}
 }
 
-func Patch() *Request {
-   return New_Request(http.MethodPatch, new(url.URL))
+func Patch(ref *url.URL) *Request {
+   return New_Request(http.MethodPatch, ref)
 }
 
-func Post() *Request {
-   return New_Request(http.MethodPost, new(url.URL))
+func Post(ref *url.URL) *Request {
+   return New_Request(http.MethodPost, ref)
 }
 
-func Post_URL(ref string) (*Request, error) {
+func Post_Parse(ref string) (*Request, error) {
    href, err := url.Parse(ref)
    if err != nil {
       return nil, err
@@ -63,6 +51,14 @@ func Post_URL(ref string) (*Request, error) {
    return New_Request(http.MethodPost, href), nil
 }
 
-func Put() *Request {
-   return New_Request(http.MethodPut, new(url.URL))
+func (r Request) Body_Bytes(b []byte) {
+   body := bytes.NewReader(b)
+   r.Body = io.NopCloser(body)
+   r.ContentLength = body.Size()
+}
+
+func (r Request) Body_String(s string) {
+   body := strings.NewReader(s)
+   r.Body = io.NopCloser(body)
+   r.ContentLength = body.Size()
 }

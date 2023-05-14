@@ -2,12 +2,13 @@ package http
 
 import (
    "net/http"
+   "net/url"
    "os"
    "testing"
 )
 
 func Test_URL(t *testing.T) {
-   req, err := Get_URL("http://httpbin.org/get")
+   req, err := Get_Parse("http://httpbin.org/get")
    if err != nil {
       t.Fatal(err)
    }
@@ -20,10 +21,11 @@ func Test_URL(t *testing.T) {
 }
 
 func Test_Request(t *testing.T) {
-   req := Get()
-   req.URL.Scheme = "http"
-   req.URL.Host = "httpbin.org"
-   req.URL.Path = "/get"
+   req := Get(&url.URL{
+      Scheme: "http",
+      Host: "httpbin.org",
+      Path: "/get",
+   })
    Default_Client.Log_Level = 2
    res, err := Default_Client.Do(req)
    if err != nil {
@@ -34,11 +36,12 @@ func Test_Request(t *testing.T) {
 }
 
 func Test_Body(t *testing.T) {
-   req := Post()
+   req := Post(&url.URL{
+      Scheme: "http",
+      Host: "httpbin.org",
+      Path: "/post",
+   })
    req.Body_String("hello=world")
-   req.URL.Host = "httpbin.org"
-   req.URL.Path = "/post"
-   req.URL.Scheme = "http"
    res, err := new(http.Transport).RoundTrip(req.Request)
    if err != nil {
       t.Fatal(err)

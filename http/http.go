@@ -56,7 +56,7 @@ func (c Client) Do(req *Request) (*Response, error) {
 }
 
 func (c Client) Get(ref string) (*Response, error) {
-   req, err := Get_URL(ref)
+   req, err := Get_Parse(ref)
    if err != nil {
       return nil, err
    }

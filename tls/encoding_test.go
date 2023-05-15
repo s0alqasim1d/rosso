@@ -10,7 +10,7 @@ import (
    "time"
 )
 
-func sign_in(name string) ([]string, error) {
+func user_info(name string) ([]string, error) {
    data, err := os.ReadFile(name)
    if err != nil {
       return nil, err
@@ -23,13 +23,13 @@ func Test_UnmarshalText(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   account, err := sign_in(home + "/Documents/gmail.txt")
+   user, err := user_info(home + "/Documents/gmail.txt")
    if err != nil {
       t.Fatal(err)
    }
    body := url.Values{
-      "Email": {account[0]},
-      "Passwd": {account[1]},
+      "Email": {user[0]},
+      "Passwd": {user[1]},
       "client_sig": {""},
       "droidguard_results": {"-"},
    }.Encode()

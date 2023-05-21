@@ -9,11 +9,13 @@ import (
    "testing"
 )
 
+// this is not valid anymore
+// need to change to CBC
 // paramount -b 622520382 -f 499000
-const ref = "https://cbsios-vh.akamaihd.net/i/temp_hd_gallery_video/CBS_Production_Outlet_VMS/video_robot/CBS_Production_Entertainment/2012/09/12/41581439/CBS_MELROSE_PLACE_001_SD_prores_78930_,503,4628,3128,2228,1628,848,000.mp4.csmil/index_0_av.m3u8?null=0&id=AgBItRcmFy81SkUfwWIsRdilI6s+0hIRmFI6R378aTEqsuj0TmwsVvPmGEoeaIYYS8H6mKrNRB0PPQ%3d%3d&hdntl=exp=1656910021~acl=%2fi%2ftemp_hd_gallery_video%2fCBS_Production_Outlet_VMS%2fvideo_robot%2fCBS_Production_Entertainment%2f2012%2f09%2f12%2f41581439%2fCBS_MELROSE_PLACE_001_SD_prores_78930_*~data=hdntl~hmac=d571a5878bd4532e7fc553c8a9fd1374e039c9506295dacdcc10533b991a3447"
+const hls_encrypt = "https://cbsios-vh.akamaihd.net/i/temp_hd_gallery_video/CBS_Production_Outlet_VMS/video_robot/CBS_Production_Entertainment/2012/09/12/41581439/CBS_MELROSE_PLACE_001_SD_prores_78930_,503,4628,3128,2228,1628,848,000.mp4.csmil/index_0_av.m3u8?null=0&id=AgBItRcmFy81SkUfwWIsRdilI6s+0hIRmFI6R378aTEqsuj0TmwsVvPmGEoeaIYYS8H6mKrNRB0PPQ%3d%3d&hdntl=exp=1656910021~acl=%2fi%2ftemp_hd_gallery_video%2fCBS_Production_Outlet_VMS%2fvideo_robot%2fCBS_Production_Entertainment%2f2012%2f09%2f12%2f41581439%2fCBS_MELROSE_PLACE_001_SD_prores_78930_*~data=hdntl~hmac=d571a5878bd4532e7fc553c8a9fd1374e039c9506295dacdcc10533b991a3447"
 
 func Test_Block(t *testing.T) {
-   res, err := http.Get(ref)
+   res, err := http.Get(hls_encrypt)
    if err != nil {
       t.Fatal(err)
    }
@@ -69,24 +71,13 @@ func nbc_media(m Medium) bool {
    return m.Type == "AUDIO"
 }
 
-func paramount_stream(s Stream) bool {
-   return strings.Contains(s.Codecs, "avc1.")
-}
-
-var tests = map[string]filters{
-   "m3u8/nbc-master.m3u8": {nbc_media, nil},
-   "m3u8/roku-master.m3u8": {nil, nil},
-   "m3u8/paramount-master.m3u8": {nil, paramount_stream},
-   "m3u8/cbc-master.m3u8": {cbc_media, cbc_stream},
-}
-
 type filters struct {
    medium func(Medium) bool
    stream func(Stream) bool
 }
 
 func Test_Media(t *testing.T) {
-   for key, val := range tests {
+   for key, val := range master_tests {
       file, err := os.Open(key)
       if err != nil {
          t.Fatal(err)
@@ -114,7 +105,7 @@ func Test_Media(t *testing.T) {
 }
 
 func Test_Stream(t *testing.T) {
-   for key, val := range tests {
+   for key, val := range master_tests {
       file, err := os.Open(key)
       if err != nil {
          t.Fatal(err)
@@ -139,26 +130,10 @@ func Test_Stream(t *testing.T) {
    }
 }
 
-func Test_Segment(t *testing.T) {
-   names := []string{
-      "m3u8/apple-audio.m3u8",
-      "m3u8/cbc-video.m3u8",
-      "m3u8/roku-segment.m3u8",
-   }
-   for _, name := range names {
-      file, err := os.Open(name)
-      if err != nil {
-         t.Fatal(err)
-      }
-      seg, err := New_Scanner(file).Segment()
-      if err != nil {
-         t.Fatal(err)
-      }
-      if err := file.Close(); err != nil {
-         t.Fatal(err)
-      }
-      fmt.Printf("%+v\n\n", seg)
-   }
+var master_tests = map[string]filters{
+   "m3u8/nbc-master.m3u8": {nbc_media, nil},
+   "m3u8/roku-master.m3u8": {nil, nil},
+   "m3u8/cbc-master.m3u8": {cbc_media, cbc_stream},
 }
 
 var raw_ivs = []string{

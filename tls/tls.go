@@ -3,9 +3,6 @@ package tls
 import (
    "crypto/md5"
    "encoding/hex"
-   "github.com/refraction-networking/utls"
-   "net"
-   "net/http"
 )
 
 func Fingerprint(ja3 string) string {
@@ -33,33 +30,3 @@ const Android_API_29 =
    "-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-51-45-43-21,29-23-24,0"
 
 const Android_API_32 = Android_API_29
-
-type Client_Hello struct {
-   *tls.ClientHelloSpec
-}
-
-// cannot call pointer method RoundTrip on http.Transport
-func (c Client_Hello) Transport() *http.Transport {
-   var tr http.Transport
-   //lint:ignore SA1019 godocs.io/context
-   tr.DialTLS = func(network, ref string) (net.Conn, error) {
-      dial_conn, err := net.Dial(network, ref)
-      if err != nil {
-         return nil, err
-      }
-      host, _, err := net.SplitHostPort(ref)
-      if err != nil {
-         return nil, err
-      }
-      config := &tls.Config{ServerName: host}
-      tls_conn := tls.UClient(dial_conn, config, tls.HelloCustom)
-      if err := tls_conn.ApplyPreset(c.ClientHelloSpec); err != nil {
-         return nil, err
-      }
-      if err := tls_conn.Handshake(); err != nil {
-         return nil, err
-      }
-      return tls_conn, nil
-   }
-   return &tr
-}

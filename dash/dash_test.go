@@ -12,7 +12,7 @@ var tests = []string{
    "mpd/amc.mpd",
    "mpd/paramount-lang.mpd",
    "mpd/paramount-role.mpd",
-   "mpd/roku.mpd",
+   "mpd/roku-eng.mpd",
 }
 
 func Test_Media(t *testing.T) {

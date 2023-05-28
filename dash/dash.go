@@ -1,9 +1,49 @@
 package dash
 
 import (
+   "encoding/xml"
+   "io"
    "strconv"
    "strings"
 )
+
+func New_Presentation(r io.Reader) (*Presentation, error) {
+   pre := new(Presentation)
+   err := xml.NewDecoder(r).Decode(pre)
+   if err != nil {
+      return nil, err
+   }
+   return pre, nil
+}
+
+type Presentation struct {
+   Period struct {
+      Adaptation_Set []Adaptation `xml:"AdaptationSet"`
+   }
+}
+
+func (p Presentation) Representation() []Representation {
+   var reps []Representation
+   for i, ada := range p.Period.Adaptation_Set {
+      for _, rep := range ada.Representation {
+         rep.Adaptation = &p.Period.Adaptation_Set[i]
+         if rep.Codecs == "" {
+            rep.Codecs = ada.Codecs
+         }
+         if rep.Content_Protection == nil {
+            rep.Content_Protection = ada.Content_Protection
+         }
+         if rep.MIME_Type == "" {
+            rep.MIME_Type = ada.MIME_Type
+         }
+         if rep.Segment_Template == nil {
+            rep.Segment_Template = ada.Segment_Template
+         }
+         reps = append(reps, rep)
+      }
+   }
+   return reps
+}
 
 func (r Representation) String() string {
    var b []byte
@@ -64,29 +104,6 @@ type Content_Protection struct {
    Scheme_ID_URI string `xml:"schemeIdUri,attr"`
 }
 
-func (p Presentation) Representation() []Representation {
-   var reps []Representation
-   for i, ada := range p.Period.Adaptation_Set {
-      for _, rep := range ada.Representation {
-         rep.Adaptation = &p.Period.Adaptation_Set[i]
-         if rep.Codecs == "" {
-            rep.Codecs = ada.Codecs
-         }
-         if rep.Content_Protection == nil {
-            rep.Content_Protection = ada.Content_Protection
-         }
-         if rep.MIME_Type == "" {
-            rep.MIME_Type = ada.MIME_Type
-         }
-         if rep.Segment_Template == nil {
-            rep.Segment_Template = ada.Segment_Template
-         }
-         reps = append(reps, rep)
-      }
-   }
-   return reps
-}
-
 func (r Representation) Initialization() string {
    return r.replace_ID(r.Segment_Template.Initialization)
 }
@@ -115,12 +132,6 @@ func (r Representation) Role() string {
       return ""
    }
    return r.Adaptation.Role.Value
-}
-
-type Presentation struct {
-   Period struct {
-      Adaptation_Set []Adaptation `xml:"AdaptationSet"`
-   }
 }
 
 type Segment struct {

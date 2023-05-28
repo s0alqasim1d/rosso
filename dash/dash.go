@@ -1,9 +1,22 @@
 package dash
 
 import (
+   "sort"
    "strconv"
    "strings"
 )
+
+type Representation struct {
+   Adaptation *Adaptation
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   Codecs string `xml:"codecs,attr"`
+   Content_Protection []Content_Protection `xml:"ContentProtection"`
+   Height int64 `xml:"height,attr"`
+   ID string `xml:"id,attr"`
+   MIME_Type string `xml:"mimeType,attr"`
+   Segment_Template *Segment_Template `xml:"SegmentTemplate"`
+   Width int64 `xml:"width,attr"`
+}
 
 func (r Representation) String() string {
    var b []byte
@@ -50,18 +63,6 @@ type Adaptation struct {
    Representation []Representation
 }
 
-type Representation struct {
-   Adaptation *Adaptation
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   Codecs string `xml:"codecs,attr"`
-   Content_Protection []Content_Protection `xml:"ContentProtection"`
-   Height int64 `xml:"height,attr"`
-   ID string `xml:"id,attr"`
-   MIME_Type string `xml:"mimeType,attr"`
-   Segment_Template *Segment_Template `xml:"SegmentTemplate"`
-   Width int64 `xml:"width,attr"`
-}
-
 func (r Representation) Widevine() *Content_Protection {
    for _, c := range r.Content_Protection {
       if c.Scheme_ID_URI == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
@@ -103,6 +104,52 @@ func (r Representation) Initialization() string {
    return r.replace_ID(r.Segment_Template.Initialization)
 }
 
+type Segment_Template struct {
+   Initialization string `xml:"initialization,attr"`
+   Media string `xml:"media,attr"`
+   Segment_Timeline struct {
+      S []Segment
+   } `xml:"SegmentTimeline"`
+   Start_Number *int `xml:"startNumber,attr"`
+}
+
+func (r Representation) Ext() string {
+   switch r.MIME_Type {
+   case "video/mp4":
+      return ".m4v"
+   case "audio/mp4":
+      return ".m4a"
+   }
+   return ""
+}
+
+func (r Representation) Role() string {
+   if r.Adaptation.Role == nil {
+      return ""
+   }
+   return r.Adaptation.Role.Value
+}
+
+type Presentation struct {
+   Period struct {
+      Adaptation_Set []Adaptation `xml:"AdaptationSet"`
+   }
+}
+
+type Segment struct {
+   D int `xml:"d,attr"` // duration
+   R int `xml:"r,attr"` // repeat
+   T int `xml:"t,attr"` // time
+}
+
+func (r Representation) replace_ID(ref string) string {
+   return strings.Replace(ref, "$RepresentationID$", r.ID, 1)
+}
+
+func (s Segment) replace(ref, old string) string {
+   return strings.Replace(ref, old, strconv.Itoa(s.T), 1)
+}
+
 func (r Representation) Media() []string {
    var start int
    if r.Segment_Template.Start_Number != nil {
@@ -113,11 +160,11 @@ func (r Representation) Media() []string {
       for seg.T = start; seg.R >= 0; seg.R-- {
          ref := r.replace_ID(r.Segment_Template.Media)
          if r.Segment_Template.Start_Number != nil {
-            ref = strings.Replace(ref, "$Number$", seg.Time(), 1)
+            ref = seg.replace(ref, "$Number$")
             seg.T++
             start++
          } else {
-            ref = strings.Replace(ref, "$Time$", seg.Time(), 1)
+            ref = seg.replace(ref, "$Time$")
             seg.T += seg.D
             start += seg.D
          }
@@ -126,6 +173,17 @@ func (r Representation) Media() []string {
    }
    return refs
 }
+
+func index_bandwidth(r []Representation, min int64) int {
+   sort.Slice(r, func(i, j int) bool {
+      return r[i].Bandwidth < r[j].Bandwidth
+   })
+   return sort.Search(len(r), func(i int) bool {
+      return r[i].Bandwidth >= min
+   })
+}
+
+type Representations []Representation
 
 func (r Representations) Filter(f func(Representation) bool) Representations {
    var carry []Representation
@@ -147,74 +205,4 @@ func (r Representations) Audio() Representations {
    return r.Filter(func(a Representation) bool {
       return a.MIME_Type == "audio/mp4"
    })
-}
-
-func (r Representations) Index(f func(a, b Representation) bool) int {
-   carry := -1
-   for i, item := range r {
-      if carry == -1 || f(r[carry], item) {
-         carry = i
-      }
-   }
-   return carry
-}
-
-func (r Representations) Bandwidth(v int64) int {
-   distance := func(a Representation) int64 {
-      if a.Bandwidth > v {
-         return a.Bandwidth - v
-      }
-      return v - a.Bandwidth
-   }
-   return r.Index(func(carry, item Representation) bool {
-      return distance(item) < distance(carry)
-   })
-}
-
-type Segment struct {
-   D int `xml:"d,attr"` // duration
-   R int `xml:"r,attr"` // repeat
-   T int `xml:"t,attr"` // time
-}
-
-func (s Segment) Time() string {
-   return strconv.Itoa(s.T)
-}
-
-type Segment_Template struct {
-   Initialization string `xml:"initialization,attr"`
-   Media string `xml:"media,attr"`
-   Segment_Timeline struct {
-      S []Segment
-   } `xml:"SegmentTimeline"`
-   Start_Number *int `xml:"startNumber,attr"`
-}
-
-type Representations []Representation
-
-type Presentation struct {
-   Period struct {
-      Adaptation_Set []Adaptation `xml:"AdaptationSet"`
-   }
-}
-
-func (r Representation) Ext() string {
-   switch r.MIME_Type {
-   case "video/mp4":
-      return ".m4v"
-   case "audio/mp4":
-      return ".m4a"
-   }
-   return ""
-}
-
-func (r Representation) Role() string {
-   if r.Adaptation.Role == nil {
-      return ""
-   }
-   return r.Adaptation.Role.Value
-}
-
-func (r Representation) replace_ID(s string) string {
-   return strings.Replace(s, "$RepresentationID$", r.ID, 1)
 }

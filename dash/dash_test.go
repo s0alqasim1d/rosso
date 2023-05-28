@@ -1,7 +1,7 @@
 package dash
 
 import (
-   "encoding/xml"
+   "bytes"
    "fmt"
    "net/http"
    "os"
@@ -16,12 +16,12 @@ var tests = []string{
 }
 
 func Test_Media(t *testing.T) {
-   data, err := os.ReadFile("mpd/roku.mpd")
+   text, err := os.ReadFile("mpd/roku-eng.mpd")
    if err != nil {
       t.Fatal(err)
    }
-   var pre Presentation
-   if err := xml.Unmarshal(data, &pre); err != nil {
+   pre, err := New_Presentation(bytes.NewReader(text))
+   if err != nil {
       t.Fatal(err)
    }
    base, err := http.NewRequest("", "http://example.com", nil)
@@ -40,12 +40,12 @@ func Test_Media(t *testing.T) {
 
 func Test_Ext(t *testing.T) {
    for _, name := range tests {
-      data, err := os.ReadFile(name)
+      text, err := os.ReadFile(name)
       if err != nil {
          t.Fatal(err)
       }
-      var pre Presentation
-      if err := xml.Unmarshal(data, &pre); err != nil {
+      pre, err := New_Presentation(bytes.NewReader(text))
+      if err != nil {
          t.Fatal(err)
       }
       fmt.Println(name)

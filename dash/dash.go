@@ -7,6 +7,12 @@ import (
    "strings"
 )
 
+type Presentation struct {
+   Period struct {
+      Adaptation_Set []Adaptation `xml:"AdaptationSet"`
+   }
+}
+
 func New_Presentation(r io.Reader) (*Presentation, error) {
    pre := new(Presentation)
    err := xml.NewDecoder(r).Decode(pre)
@@ -14,12 +20,6 @@ func New_Presentation(r io.Reader) (*Presentation, error) {
       return nil, err
    }
    return pre, nil
-}
-
-type Presentation struct {
-   Period struct {
-      Adaptation_Set []Adaptation `xml:"AdaptationSet"`
-   }
 }
 
 func (p Presentation) Representation() []Representation {
@@ -65,14 +65,14 @@ func (r Representation) String() string {
       b = append(b, "\n\tcodecs: "...)
       b = append(b, r.Codecs...)
    }
-   b = append(b, "\n\tMIME type: "...)
+   b = append(b, "\n\ttype: "...)
    b = append(b, r.MIME_Type...)
    if r.Adaptation.Role != nil {
       b = append(b, "\n\trole: "...)
       b = append(b, r.Adaptation.Role.Value...)
    }
    if r.Adaptation.Lang != "" {
-      b = append(b, "\n\tlang: "...)
+      b = append(b, "\n\tlanguage: "...)
       b = append(b, r.Adaptation.Lang...)
    }
    return string(b)

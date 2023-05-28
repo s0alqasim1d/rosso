@@ -1,6 +1,6 @@
 module 2a.pages.dev/rosso
 
-go 1.19
+go 1.20
 
 require (
 	github.com/Eyevinn/mp4ff v0.35.0

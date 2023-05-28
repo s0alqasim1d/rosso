@@ -2,35 +2,12 @@ package dash
 
 import "sort"
 
-func filter[T any](s []T, fn func(T) bool) []T {
-   var values []T
-   for _, value := range s {
-      if fn(value) {
-         values = append(values, value)
-      }
-   }
-   return values
+func Audio(r Representation) bool {
+   return r.MIME_Type == "audio/mp4"
 }
 
-func Audio(s []Representation) []Representation {
-   return filter(s, func(r Representation) bool {
-      return r.MIME_Type == "audio/mp4"
-   })
-}
-
-func Index_Bandwidth(s []Representation, min int64) int {
-   sort.Slice(s, func(i, j int) bool {
-      return s[i].Bandwidth < s[j].Bandwidth
-   })
-   return sort.Search(len(s), func(i int) bool {
-      return s[i].Bandwidth >= min
-   })
-}
-
-func Video(s []Representation) []Representation {
-   return filter(s, func(r Representation) bool {
-      return r.MIME_Type == "video/mp4"
-   })
+func Video(r Representation) bool {
+   return r.MIME_Type == "video/mp4"
 }
 
 type Representation struct {
@@ -43,4 +20,32 @@ type Representation struct {
    MIME_Type string `xml:"mimeType,attr"`
    Segment_Template *Segment_Template `xml:"SegmentTemplate"`
    Width int64 `xml:"width,attr"`
+}
+
+// github.com/golang/go/blob/go1.20.4/src/internal/types/testdata/check/slices.go
+func Filter[T any](s []T, fn func(T) bool) []T {
+   var values []T
+   for _, value := range s {
+      if fn(value) {
+         values = append(values, value)
+      }
+   }
+   return values
+}
+
+// github.com/golang/exp/blob/2e198f4/slices/slices.go
+func Index_Func[E any](s []E, fn func(E) bool) int {
+   for index, value := range s {
+      if fn(value) {
+         return index
+      }
+   }
+   return -1
+}
+
+// github.com/golang/exp/blob/2e198f4/slices/sort.go
+func Sort_Func[E any](s []E, less func(a, b E) bool) {
+   sort.Slice(s, func(i, j int) bool {
+      return less(s[i], s[j])
+   })
 }

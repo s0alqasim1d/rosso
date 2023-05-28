@@ -5,53 +5,8 @@ import (
    "fmt"
    "net/http"
    "os"
-   "strings"
    "testing"
 )
-
-func Test_Video(t *testing.T) {
-   for _, name := range tests {
-      data, err := os.ReadFile(name)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var pre Presentation
-      if err := xml.Unmarshal(data, &pre); err != nil {
-         t.Fatal(err)
-      }
-      reps := pre.Representation().Video()
-      fmt.Println(name)
-      for i, rep := range reps {
-         if i == reps.Bandwidth(0) {
-            fmt.Print("!")
-         }
-         fmt.Println(rep)
-      }
-      fmt.Println()
-   }
-}
-
-func Test_Info(t *testing.T) {
-   for _, name := range tests {
-      data, err := os.ReadFile(name)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var pre Presentation
-      if err := xml.Unmarshal(data, &pre); err != nil {
-         t.Fatal(err)
-      }
-      fmt.Println(name)
-      reps := pre.Representation()
-      for _, rep := range reps.Audio() {
-         fmt.Println(rep)
-      }
-      for _, rep := range reps.Video() {
-         fmt.Println(rep)
-      }
-      fmt.Println()
-   }
-}
 
 var tests = []string{
    "mpd/amc.mpd",
@@ -80,40 +35,6 @@ func Test_Media(t *testing.T) {
       }
       req.URL = base.URL.ResolveReference(req.URL)
       fmt.Println(req.URL)
-   }
-}
-
-func Test_Audio(t *testing.T) {
-   for _, name := range tests {
-      data, err := os.ReadFile(name)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var pre Presentation
-      if err := xml.Unmarshal(data, &pre); err != nil {
-         t.Fatal(err)
-      }
-      reps := pre.Representation().Audio()
-      target := reps.Index(func(carry, item Representation) bool {
-         if !strings.HasPrefix(item.Adaptation.Lang, "en") {
-            return false
-         }
-         if !strings.Contains(item.Codecs, "mp4a.") {
-            return false
-         }
-         if item.Role() == "description" {
-            return false
-         }
-         return true
-      })
-      fmt.Println(name)
-      for i, rep := range reps {
-         if i == target {
-            fmt.Print("!")
-         }
-         fmt.Println(rep)
-      }
-      fmt.Println()
    }
 }
 

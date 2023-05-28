@@ -1,22 +1,9 @@
 package dash
 
 import (
-   "sort"
    "strconv"
    "strings"
 )
-
-type Representation struct {
-   Adaptation *Adaptation
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   Codecs string `xml:"codecs,attr"`
-   Content_Protection []Content_Protection `xml:"ContentProtection"`
-   Height int64 `xml:"height,attr"`
-   ID string `xml:"id,attr"`
-   MIME_Type string `xml:"mimeType,attr"`
-   Segment_Template *Segment_Template `xml:"SegmentTemplate"`
-   Width int64 `xml:"width,attr"`
-}
 
 func (r Representation) String() string {
    var b []byte
@@ -77,7 +64,7 @@ type Content_Protection struct {
    Scheme_ID_URI string `xml:"schemeIdUri,attr"`
 }
 
-func (p Presentation) Representation() Representations {
+func (p Presentation) Representation() []Representation {
    var reps []Representation
    for i, ada := range p.Period.Adaptation_Set {
       for _, rep := range ada.Representation {
@@ -172,37 +159,4 @@ func (r Representation) Media() []string {
       }
    }
    return refs
-}
-
-func index_bandwidth(r []Representation, min int64) int {
-   sort.Slice(r, func(i, j int) bool {
-      return r[i].Bandwidth < r[j].Bandwidth
-   })
-   return sort.Search(len(r), func(i int) bool {
-      return r[i].Bandwidth >= min
-   })
-}
-
-type Representations []Representation
-
-func (r Representations) Filter(f func(Representation) bool) Representations {
-   var carry []Representation
-   for _, item := range r {
-      if f(item) {
-         carry = append(carry, item)
-      }
-   }
-   return carry
-}
-
-func (r Representations) Video() Representations {
-   return r.Filter(func(a Representation) bool {
-      return a.MIME_Type == "video/mp4"
-   })
-}
-
-func (r Representations) Audio() Representations {
-   return r.Filter(func(a Representation) bool {
-      return a.MIME_Type == "audio/mp4"
-   })
 }

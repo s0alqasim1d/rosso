@@ -9,6 +9,28 @@ import (
    "testing"
 )
 
+func Test_Video(t *testing.T) {
+   for _, name := range tests {
+      data, err := os.ReadFile(name)
+      if err != nil {
+         t.Fatal(err)
+      }
+      var pre Presentation
+      if err := xml.Unmarshal(data, &pre); err != nil {
+         t.Fatal(err)
+      }
+      reps := pre.Representation().Video()
+      fmt.Println(name)
+      for i, rep := range reps {
+         if i == reps.Bandwidth(0) {
+            fmt.Print("!")
+         }
+         fmt.Println(rep)
+      }
+      fmt.Println()
+   }
+}
+
 func Test_Info(t *testing.T) {
    for _, name := range tests {
       data, err := os.ReadFile(name)
@@ -87,28 +109,6 @@ func Test_Audio(t *testing.T) {
       fmt.Println(name)
       for i, rep := range reps {
          if i == target {
-            fmt.Print("!")
-         }
-         fmt.Println(rep)
-      }
-      fmt.Println()
-   }
-}
-
-func Test_Video(t *testing.T) {
-   for _, name := range tests {
-      data, err := os.ReadFile(name)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var pre Presentation
-      if err := xml.Unmarshal(data, &pre); err != nil {
-         t.Fatal(err)
-      }
-      reps := pre.Representation().Video()
-      fmt.Println(name)
-      for i, rep := range reps {
-         if i == reps.Bandwidth(0) {
             fmt.Print("!")
          }
          fmt.Println(rep)

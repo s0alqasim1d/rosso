@@ -15,6 +15,24 @@ var tests = []string{
    "mpd/roku-eng.mpd",
 }
 
+func Test_Ext(t *testing.T) {
+   for _, name := range tests {
+      text, err := os.ReadFile(name)
+      if err != nil {
+         t.Fatal(err)
+      }
+      pre, err := New_Presentation(bytes.NewReader(text))
+      if err != nil {
+         t.Fatal(err)
+      }
+      fmt.Println(name)
+      for _, rep := range pre.Representation() {
+         fmt.Printf("%q\n", rep.Ext())
+      }
+      fmt.Println()
+   }
+}
+
 func Test_Media(t *testing.T) {
    text, err := os.ReadFile("mpd/roku-eng.mpd")
    if err != nil {
@@ -35,23 +53,5 @@ func Test_Media(t *testing.T) {
       }
       req.URL = base.URL.ResolveReference(req.URL)
       fmt.Println(req.URL)
-   }
-}
-
-func Test_Ext(t *testing.T) {
-   for _, name := range tests {
-      text, err := os.ReadFile(name)
-      if err != nil {
-         t.Fatal(err)
-      }
-      pre, err := New_Presentation(bytes.NewReader(text))
-      if err != nil {
-         t.Fatal(err)
-      }
-      fmt.Println(name)
-      for _, rep := range pre.Representation() {
-         fmt.Printf("%q\n", rep.Ext())
-      }
-      fmt.Println()
    }
 }

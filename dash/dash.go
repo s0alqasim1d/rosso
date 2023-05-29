@@ -65,29 +65,6 @@ func New_Presentation(r io.Reader) (*Presentation, error) {
    return pre, nil
 }
 
-func (p Presentation) Representation() []Representation {
-   var reps []Representation
-   for i, ada := range p.Period.Adaptation_Set {
-      for _, rep := range ada.Representation {
-         rep.Adaptation = &p.Period.Adaptation_Set[i]
-         if rep.Codecs == "" {
-            rep.Codecs = ada.Codecs
-         }
-         if rep.Content_Protection == nil {
-            rep.Content_Protection = ada.Content_Protection
-         }
-         if rep.MIME_Type == "" {
-            rep.MIME_Type = ada.MIME_Type
-         }
-         if rep.Segment_Template == nil {
-            rep.Segment_Template = ada.Segment_Template
-         }
-         reps = append(reps, rep)
-      }
-   }
-   return reps
-}
-
 func (r Representation) Ext() string {
    switch {
    case Audio(r):

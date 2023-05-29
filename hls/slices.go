@@ -5,22 +5,6 @@ import (
    "strings"
 )
 
-func (Medium) Ext() string {
-   return ".m4a"
-}
-
-func (m Medium) URI() string {
-   return m.Raw_URI
-}
-
-func (Stream) Ext() string {
-   return ".m4v"
-}
-
-func (m Stream) URI() string {
-   return m.Raw_URI
-}
-
 type Medium struct {
    Group_ID string
    Name string
@@ -69,4 +53,56 @@ func (m Medium) String() string {
       b.WriteString(m.Characteristics)
    }
    return b.String()
+}
+
+type Media []Medium
+
+type Streams []Stream
+
+func filter[T Mixed](slice []T, callback func(T) bool) []T {
+   var carry []T
+   for _, item := range slice {
+      if callback(item) {
+         carry = append(carry, item)
+      }
+   }
+   return carry
+}
+
+func index[T Mixed](slice []T, callback func(T, T) bool) int {
+   carry := -1
+   for i, item := range slice {
+      if carry == -1 || callback(slice[carry], item) {
+         carry = i
+      }
+   }
+   return carry
+}
+
+func (m Media) Filter(f func(Medium) bool) Media {
+   return filter(m, f)
+}
+
+func (m Streams) Filter(f func(Stream) bool) Streams {
+   return filter(m, f)
+}
+
+func (m Media) Index(f func(a, b Medium) bool) int {
+   return index(m, f)
+}
+
+func (m Streams) Index(f func(a, b Stream) bool) int {
+   return index(m, f)
+}
+
+func (m Streams) Bandwidth(v int64) int {
+   distance := func(a Stream) int64 {
+      if a.Bandwidth > v {
+         return a.Bandwidth - v
+      }
+      return v - a.Bandwidth
+   }
+   return m.Index(func(carry, item Stream) bool {
+      return distance(item) < distance(carry)
+   })
 }

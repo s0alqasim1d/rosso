@@ -1,13 +1,52 @@
 package hls
 
 import (
+   "bytes"
    "fmt"
    "io"
    "net/http"
    "os"
-   "strings"
+   "sort"
    "testing"
 )
+
+var segment_tests = []string{
+   "m3u8/cbc-audio.m3u8",
+   "m3u8/cbc-video.m3u8",
+   "m3u8/nbc-segment.m3u8",
+   "m3u8/roku-segment.m3u8",
+}
+
+func Test_Reverse(t *testing.T) {
+   for _, test := range segment_tests {
+      fmt.Println(test + ":")
+      data, err := os.ReadFile(test + ".txt")
+      if err != nil {
+         t.Fatal(err)
+      }
+      sort.SliceStable(data, func(int, int) bool {
+         return true
+      })
+      os.Stdout.Write(data)
+   }
+}
+
+func Test_Segment(t *testing.T) {
+   for _, test := range segment_tests {
+      data, err := os.ReadFile(test + ".txt")
+      if err != nil {
+         t.Fatal(err)
+      }
+      sort.SliceStable(data, func(int, int) bool {
+         return true
+      })
+      seg, err := New_Scanner(bytes.NewReader(data)).Segment()
+      if err != nil {
+         t.Fatal(err)
+      }
+      fmt.Printf("%+v\n\n", seg)
+   }
+}
 
 // this is not valid anymore
 // need to change to CBC
@@ -57,83 +96,6 @@ func Test_Block(t *testing.T) {
          t.Fatal(err)
       }
    }
-}
-
-func cbc_media(m Medium) bool {
-   return m.Type == "AUDIO"
-}
-
-func cbc_stream(s Stream) bool {
-   return strings.Contains(s.Codecs, "avc1.")
-}
-
-func nbc_media(m Medium) bool {
-   return m.Type == "AUDIO"
-}
-
-type filters struct {
-   medium func(Medium) bool
-   stream func(Stream) bool
-}
-
-func Test_Media(t *testing.T) {
-   for key, val := range master_tests {
-      file, err := os.Open(key)
-      if err != nil {
-         t.Fatal(err)
-      }
-      master, err := New_Scanner(file).Master()
-      if err != nil {
-         t.Fatal(err)
-      }
-      if err := file.Close(); err != nil {
-         t.Fatal(err)
-      }
-      master.Media = master.Media.Filter(val.medium)
-      target := master.Media.Index(func(carry, item Medium) bool {
-         return item.Name == "English"
-      })
-      fmt.Println(key)
-      for i, medium := range master.Media {
-         if i == target {
-            fmt.Print("!")
-         }
-         fmt.Println(medium)
-      }
-      fmt.Println()
-   }
-}
-
-func Test_Stream(t *testing.T) {
-   for key, val := range master_tests {
-      file, err := os.Open(key)
-      if err != nil {
-         t.Fatal(err)
-      }
-      master, err := New_Scanner(file).Master()
-      if err != nil {
-         t.Fatal(err)
-      }
-      if err := file.Close(); err != nil {
-         t.Fatal(err)
-      }
-      items := master.Streams.Filter(val.stream)
-      index := items.Bandwidth(0)
-      fmt.Println(key)
-      for i, item := range items {
-         if i == index {
-            fmt.Print("!")
-         }
-         fmt.Println(item)
-      }
-      fmt.Println()
-   }
-}
-
-var master_tests = map[string]filters{
-   "m3u8/nbc-master.m3u8": {nbc_media, nil},
-   "m3u8/roku-master.m3u8": {nil, nil},
-   "m3u8/cbc-master.m3u8": {cbc_media, cbc_stream},
 }
 
 var raw_ivs = []string{

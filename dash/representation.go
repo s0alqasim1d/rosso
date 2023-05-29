@@ -5,6 +5,39 @@ import (
    "strings"
 )
 
+func (r Representation) String() string {
+   var b []byte
+   b = append(b, "ID: "...)
+   b = append(b, r.ID...)
+   if r.Width >= 1 {
+      b = append(b, "\nwidth: "...)
+      b = strconv.AppendInt(b, r.Width, 10)
+   }
+   if r.Height >= 1 {
+      b = append(b, "\nheight: "...)
+      b = strconv.AppendInt(b, r.Height, 10)
+   }
+   if r.Bandwidth >= 1 {
+      b = append(b, "\nbandwidth: "...)
+      b = strconv.AppendInt(b, r.Bandwidth, 10)
+   }
+   if r.Codecs != "" {
+      b = append(b, "\ncodecs: "...)
+      b = append(b, r.Codecs...)
+   }
+   b = append(b, "\ntype: "...)
+   b = append(b, r.MIME_Type...)
+   if r.Adaptation.Role != nil {
+      b = append(b, "\nrole: "...)
+      b = append(b, r.Adaptation.Role.Value...)
+   }
+   if r.Adaptation.Lang != "" {
+      b = append(b, "\nlanguage: "...)
+      b = append(b, r.Adaptation.Lang...)
+   }
+   return string(b)
+}
+
 type Representation struct {
    Bandwidth int64 `xml:"bandwidth,attr"`
    Codecs string `xml:"codecs,attr"`
@@ -54,39 +87,6 @@ func (r Representation) Role() string {
       return r.Adaptation.Role.Value
    }
    return ""
-}
-
-func (r Representation) String() string {
-   var b []byte
-   b = append(b, "ID: "...)
-   b = append(b, r.ID...)
-   if r.Width >= 1 {
-      b = append(b, "\n\twidth: "...)
-      b = strconv.AppendInt(b, r.Width, 10)
-   }
-   if r.Height >= 1 {
-      b = append(b, "\n\theight: "...)
-      b = strconv.AppendInt(b, r.Height, 10)
-   }
-   if r.Bandwidth >= 1 {
-      b = append(b, "\n\tbandwidth: "...)
-      b = strconv.AppendInt(b, r.Bandwidth, 10)
-   }
-   if r.Codecs != "" {
-      b = append(b, "\n\tcodecs: "...)
-      b = append(b, r.Codecs...)
-   }
-   b = append(b, "\n\ttype: "...)
-   b = append(b, r.MIME_Type...)
-   if r.Adaptation.Role != nil {
-      b = append(b, "\n\trole: "...)
-      b = append(b, r.Adaptation.Role.Value...)
-   }
-   if r.Adaptation.Lang != "" {
-      b = append(b, "\n\tlanguage: "...)
-      b = append(b, r.Adaptation.Lang...)
-   }
-   return string(b)
 }
 
 func (r Representation) Widevine() *Content_Protection {

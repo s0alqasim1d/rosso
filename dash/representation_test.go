@@ -8,6 +8,30 @@ import (
    "testing"
 )
 
+func Test_Info(t *testing.T) {
+   for name := range tests {
+      text, err := os.ReadFile(name)
+      if err != nil {
+         t.Fatal(err)
+      }
+      pre, err := New_Presentation(bytes.NewReader(text))
+      if err != nil {
+         t.Fatal(err)
+      }
+      fmt.Println(name)
+      reps := Filter(pre.Representation(), func(r Representation) bool {
+         return Audio(r) || Video(r)
+      })
+      for i, rep := range reps {
+         if i >= 1 {
+            fmt.Println()
+         }
+         fmt.Println(rep)
+      }
+      fmt.Println()
+   }
+}
+
 const (
    ascending = iota
    descending
@@ -48,27 +72,6 @@ func Test_Audio(t *testing.T) {
          if i == target {
             fmt.Print("!")
          }
-         fmt.Println(rep)
-      }
-      fmt.Println()
-   }
-}
-
-func Test_Info(t *testing.T) {
-   for name := range tests {
-      text, err := os.ReadFile(name)
-      if err != nil {
-         t.Fatal(err)
-      }
-      pre, err := New_Presentation(bytes.NewReader(text))
-      if err != nil {
-         t.Fatal(err)
-      }
-      fmt.Println(name)
-      reps := Filter(pre.Representation(), func(r Representation) bool {
-         return Audio(r) || Video(r)
-      })
-      for _, rep := range reps {
          fmt.Println(rep)
       }
       fmt.Println()

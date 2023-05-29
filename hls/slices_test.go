@@ -11,23 +11,22 @@ import (
 
 func Test_Stream(t *testing.T) {
    for key, value := range master_tests {
-      file, err := os.Open(key)
+      text, err := reverse(key)
       if err != nil {
          t.Fatal(err)
       }
-      master, err := New_Scanner(file).Master()
+      master, err := New_Scanner(bytes.NewReader(text)).Master()
       if err != nil {
          t.Fatal(err)
       }
-      if err := file.Close(); err != nil {
-         t.Fatal(err)
+      if value.stream != nil {
+         master.Stream = Filter(master.Stream, value.stream)
       }
-      items := Filter(master.Stream, value.stream)
-      index := Index_Func(items, func(s Stream) bool {
+      index := Index_Func(master.Stream, func(s Stream) bool {
          return s.Bandwidth >= 1
       })
       fmt.Println(key)
-      for i, item := range items {
+      for i, item := range master.Stream {
          if i == index {
             fmt.Print("!")
          }
@@ -38,22 +37,51 @@ func Test_Stream(t *testing.T) {
 }
 
 var master_tests = map[string]filters{
-   "m3u8/nbc-master.m3u8": {nbc_media, nil},
-   "m3u8/roku-master.m3u8": {nil, nil},
-   "m3u8/cbc-master.m3u8": {cbc_media, cbc_stream},
+   "m3u8/nbc-master.m3u8.txt": {nbc_media, nil},
+   "m3u8/roku-master.m3u8.txt": {nil, nil},
+   "m3u8/cbc-master.m3u8.txt": {cbc_media, cbc_stream},
+}
+
+func reverse(name string) ([]byte, error) {
+   text, err := os.ReadFile(name)
+   if err != nil {
+      return nil, err
+   }
+   sort.SliceStable(text, func(int, int) bool {
+      return true
+   })
+   return text, nil
+}
+
+func Test_Info(t *testing.T) {
+   for test := range master_tests {
+      text, err := reverse(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      master, err := New_Scanner(bytes.NewReader(text)).Master()
+      if err != nil {
+         t.Fatal(err)
+      }
+      fmt.Println(test)
+      for _, item := range master.Stream {
+         fmt.Println(item)
+      }
+      for _, item := range master.Media {
+         fmt.Println(item)
+      }
+      fmt.Println()
+   }
 }
 
 func Test_Media(t *testing.T) {
    for key, value := range master_tests {
-      file, err := os.Open(key)
+      text, err := reverse(key)
       if err != nil {
          t.Fatal(err)
       }
-      master, err := New_Scanner(file).Master()
+      master, err := New_Scanner(bytes.NewReader(text)).Master()
       if err != nil {
-         t.Fatal(err)
-      }
-      if err := file.Close(); err != nil {
          t.Fatal(err)
       }
       master.Media = Filter(master.Media, value.media)
@@ -66,30 +94,6 @@ func Test_Media(t *testing.T) {
             fmt.Print("!")
          }
          fmt.Println(media)
-      }
-      fmt.Println()
-   }
-}
-
-func Test_Info(t *testing.T) {
-   for test := range master_tests {
-      data, err := os.ReadFile(test + ".txt")
-      if err != nil {
-         t.Fatal(err)
-      }
-      sort.SliceStable(data, func(int, int) bool {
-         return true
-      })
-      master, err := New_Scanner(bytes.NewReader(data)).Master()
-      if err != nil {
-         t.Fatal(err)
-      }
-      fmt.Println(test)
-      for _, item := range master.Stream {
-         fmt.Println(item)
-      }
-      for _, item := range master.Media {
-         fmt.Println(item)
       }
       fmt.Println()
    }

@@ -5,13 +5,12 @@ import (
    "fmt"
    "os"
    "sort"
-   "strings"
    "testing"
 )
 
-func Test_Stream(t *testing.T) {
-   for key, value := range master_tests {
-      text, err := reverse(key)
+func Test_Media(t *testing.T) {
+   for name := range master_tests {
+      text, err := reverse(name)
       if err != nil {
          t.Fatal(err)
       }
@@ -19,28 +18,52 @@ func Test_Stream(t *testing.T) {
       if err != nil {
          t.Fatal(err)
       }
-      if value.stream != nil {
-         master.Stream = Filter(master.Stream, value.stream)
-      }
-      index := Index_Func(master.Stream, func(s Stream) bool {
-         return s.Bandwidth >= 1
+      target := master.Media.Index(func(m Medium) bool {
+         return m.Name == "English"
       })
-      fmt.Println(key)
-      for i, item := range master.Stream {
-         if i == index {
+      fmt.Println(name)
+      for i, media := range master.Media {
+         if i == target {
             fmt.Print("!")
          }
-         fmt.Println(item)
+         fmt.Println(media)
+      }
+      fmt.Println()
+   }
+}
+func Test_Info(t *testing.T) {
+   for name := range master_tests {
+      text, err := reverse(name)
+      if err != nil {
+         t.Fatal(err)
+      }
+      fmt.Println(name)
+      master, err := New_Scanner(bytes.NewReader(text)).Master()
+      if err != nil {
+         t.Fatal(err)
+      }
+      for i, value := range master.Streams {
+         if i >= 1 {
+            fmt.Println()
+         }
+         fmt.Println(value)
+      }
+      fmt.Println()
+      for i, value := range master.Media {
+         if i >= 1 {
+            fmt.Println()
+         }
+         fmt.Println(value)
       }
       fmt.Println()
    }
 }
 
-var master_tests = map[string]filters{
-   "m3u8/nbc-master.m3u8.txt": {nbc_media, nil},
-   "m3u8/roku-master.m3u8.txt": {nil, nil},
-   "m3u8/cbc-master.m3u8.txt": {cbc_media, cbc_stream},
-}
+const (
+   ascending = iota
+   descending
+   random
+)
 
 func reverse(name string) ([]byte, error) {
    text, err := os.ReadFile(name)
@@ -52,31 +75,15 @@ func reverse(name string) ([]byte, error) {
    })
    return text, nil
 }
-
-func Test_Info(t *testing.T) {
-   for test := range master_tests {
-      text, err := reverse(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      master, err := New_Scanner(bytes.NewReader(text)).Master()
-      if err != nil {
-         t.Fatal(err)
-      }
-      fmt.Println(test)
-      for _, item := range master.Stream {
-         fmt.Println(item)
-      }
-      for _, item := range master.Media {
-         fmt.Println(item)
-      }
-      fmt.Println()
-   }
+var master_tests = map[string]int{
+   "m3u8/cbc-master.m3u8.txt": random,
+   "m3u8/nbc-master.m3u8.txt": random,
+   "m3u8/roku-master.m3u8.txt": descending,
 }
 
-func Test_Media(t *testing.T) {
-   for key, value := range master_tests {
-      text, err := reverse(key)
+func Test_Stream(t *testing.T) {
+   for name, order := range master_tests {
+      text, err := reverse(name)
       if err != nil {
          t.Fatal(err)
       }
@@ -84,34 +91,32 @@ func Test_Media(t *testing.T) {
       if err != nil {
          t.Fatal(err)
       }
-      master.Media = Filter(master.Media, value.media)
-      target := Index_Func(master.Media, func(m Media) bool {
-         return m.Name == "English"
-      })
-      fmt.Println(key)
-      for i, media := range master.Media {
+      if order == random {
+         master.Streams.Sort(func(a, b Stream) bool {
+            return a.Bandwidth < b.Bandwidth
+         })
+      }
+      var target int
+      if order == descending {
+         target = master.Streams.Last_Index(func(a Stream) bool {
+            return a.Bandwidth >= 999_999
+         })
+      } else {
+         target = master.Streams.Index(func(a Stream) bool {
+            return a.Bandwidth >= 999_999
+         })
+      }
+      fmt.Println(name)
+      for i, value := range master.Streams {
+         if i >= 1 {
+            fmt.Println()
+         }
          if i == target {
             fmt.Print("!")
          }
-         fmt.Println(media)
+         fmt.Println(value)
       }
       fmt.Println()
    }
 }
 
-func cbc_media(m Media) bool {
-   return m.Type == "AUDIO"
-}
-
-func cbc_stream(s Stream) bool {
-   return strings.Contains(s.Codecs, "avc1.")
-}
-
-func nbc_media(m Media) bool {
-   return m.Type == "AUDIO"
-}
-
-type filters struct {
-   media func(Media) bool
-   stream func(Stream) bool
-}

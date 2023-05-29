@@ -19,7 +19,7 @@ func Test_Ext(t *testing.T) {
          t.Fatal(err)
       }
       fmt.Println(name)
-      for _, rep := range pre.Representation() {
+      for _, rep := range pre.Represents() {
          fmt.Printf("%q\n", rep.Ext())
       }
       fmt.Println()

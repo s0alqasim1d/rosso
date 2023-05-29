@@ -40,11 +40,14 @@ func Test_Block(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   for i, ref := range seg.URI {
-      fmt.Println(ref)
-      continue
-      fmt.Println(len(seg.URI)-i)
-      res, err := http.Get(ref)
+   for i := 0; i <= 9; i++ {
+      req, err := http.NewRequest("GET", seg.URI[i], nil)
+      if err != nil {
+         t.Fatal(err)
+      }
+      fmt.Println(req.URL)
+      req.URL = res.Request.URL.ResolveReference(req.URL)
+      res, err := new(http.Transport).RoundTrip(req)
       if err != nil {
          t.Fatal(err)
       }

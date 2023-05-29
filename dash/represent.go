@@ -5,7 +5,7 @@ import (
    "strings"
 )
 
-func (r Representation) String() string {
+func (r Represent) String() string {
    var b []byte
    b = append(b, "ID: "...)
    b = append(b, r.ID...)
@@ -38,7 +38,7 @@ func (r Representation) String() string {
    return string(b)
 }
 
-type Representation struct {
+type Represent struct {
    Bandwidth int64 `xml:"bandwidth,attr"`
    Codecs string `xml:"codecs,attr"`
    Content_Protection []Content_Protection `xml:"ContentProtection"`
@@ -50,7 +50,7 @@ type Representation struct {
    Adaptation *Adaptation // this is to get to Role
 }
 
-func (r Representation) Media() []string {
+func (r Represent) Media() []string {
    var refs []string
    for _, seg := range r.Segment_Template.Segment_Timeline.S {
       seg.T = r.Segment_Template.Start_Number
@@ -68,7 +68,7 @@ func (r Representation) Media() []string {
    return refs
 }
 
-func (r Representation) Ext() string {
+func (r Represent) Ext() string {
    switch {
    case Audio(r):
       return ".m4a"
@@ -78,18 +78,18 @@ func (r Representation) Ext() string {
    return ""
 }
 
-func (r Representation) Initialization() string {
+func (r Represent) Initialization() string {
    return r.replace_ID(r.Segment_Template.Initialization)
 }
 
-func (r Representation) Role() string {
+func (r Represent) Role() string {
    if r.Adaptation.Role != nil {
       return r.Adaptation.Role.Value
    }
    return ""
 }
 
-func (r Representation) Widevine() *Content_Protection {
+func (r Represent) Widevine() *Content_Protection {
    for _, c := range r.Content_Protection {
       if c.Scheme_ID_URI == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
          return &c
@@ -98,6 +98,6 @@ func (r Representation) Widevine() *Content_Protection {
    return nil
 }
 
-func (r Representation) replace_ID(ref string) string {
+func (r Represent) replace_ID(ref string) string {
    return strings.Replace(ref, "$RepresentationID$", r.ID, 1)
 }

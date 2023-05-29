@@ -1,32 +1,22 @@
 package hls
 
 import (
+   "2a.pages.dev/rosso/slices"
    "strconv"
    "strings"
 )
 
-// github.com/golang/go/blob/go1.20.4/src/internal/types/testdata/check/slices.go
-func Filter[T any](s []T, f func(T) bool) []T {
-   var values []T
-   for _, value := range s {
-      if f(value) {
-         values = append(values, value)
-      }
-   }
-   return values
+type Media []Medium
+
+func (m Media) Filter(f func(Medium) bool) Media {
+   return slices.Filter(m, f)
 }
 
-// github.com/golang/exp/blob/2e198f4/slices/slices.go
-func Index_Func[T any](s []T, f func(T) bool) int {
-   for i, value := range s {
-      if f(value) {
-         return i
-      }
-   }
-   return -1
+func (m Media) Index(f func(Medium) bool) int {
+   return slices.Index_Func(m, f)
 }
 
-type Media struct {
+type Medium struct {
    Group_ID string
    Type string
    Name string
@@ -34,7 +24,7 @@ type Media struct {
    Raw_URI string
 }
 
-func (m Media) String() string {
+func (m Medium) String() string {
    var b strings.Builder
    b.WriteString("group ID: ")
    b.WriteString(m.Group_ID)
@@ -75,4 +65,22 @@ func (m Stream) String() string {
       b = append(b, m.Audio...)
    }
    return string(b)
+}
+
+type Streams []Stream
+
+func (s Streams) Filter(f func(Stream) bool) Streams {
+   return slices.Filter(s, f)
+}
+
+func (s Streams) Index(f func(Stream) bool) int {
+   return slices.Index_Func(s, f)
+}
+
+func (s Streams) Last_Index(f func(Stream) bool) int {
+   return slices.Last_Index_Func(s, f)
+}
+
+func (s Streams) Sort(f func(a, b Stream) bool) {
+   slices.Sort_Func(s, f)
 }

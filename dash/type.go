@@ -40,8 +40,6 @@ func (p Presentation) Representation() []Representation {
    return reps
 }
 
-/////////////////////////////////////////////////////////////
-
 type Adaptation struct {
    Codecs string `xml:"codecs,attr"`
    Content_Protection []Content_Protection `xml:"ContentProtection"`
@@ -53,6 +51,8 @@ type Adaptation struct {
    }
    Segment_Template *Segment_Template `xml:"SegmentTemplate"`
 }
+
+/////////////////////////////////////////////////////////////
 
 type Representation struct {
    Bandwidth int64 `xml:"bandwidth,attr"`

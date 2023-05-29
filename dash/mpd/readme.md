@@ -2,9 +2,7 @@
 
 ## paramount.mpd
 
-~~~
-PARAMOUNT_Spongebob_Movie_The_Sponge_On_The_Run_36369_FTR_R_en-US_907335_1_eac3_192
-~~~
+https://paramountplus.com/shows/video/rn1zyirVOPjCl8rxopWrhUmJEIs3GcKW
 
 ## roku-en.mpd
 

@@ -12,10 +12,6 @@ func Audio(r Representation) bool {
    return r.MIME_Type == "audio/mp4"
 }
 
-func Video(r Representation) bool {
-   return r.MIME_Type == "video/mp4"
-}
-
 // github.com/golang/go/blob/go1.20.4/src/internal/types/testdata/check/slices.go
 func Filter[T any](s []T, f func(T) bool) []T {
    var values []T
@@ -56,6 +52,10 @@ func Sort_Func[T any](s []T, less func(a, b T) bool) {
    })
 }
 
+func Video(r Representation) bool {
+   return r.MIME_Type == "video/mp4"
+}
+
 func New_Presentation(r io.Reader) (*Presentation, error) {
    pre := new(Presentation)
    err := xml.NewDecoder(r).Decode(pre)
@@ -77,30 +77,6 @@ func (r Representation) Ext() string {
 
 func (r Representation) Initialization() string {
    return r.replace_ID(r.Segment_Template.Initialization)
-}
-
-func (r Representation) Media() []string {
-   var start int
-   if r.Segment_Template.Start_Number != nil {
-      start = *r.Segment_Template.Start_Number
-   }
-   var refs []string
-   for _, seg := range r.Segment_Template.Segment_Timeline.S {
-      for seg.T = start; seg.R >= 0; seg.R-- {
-         ref := r.replace_ID(r.Segment_Template.Media)
-         if r.Segment_Template.Start_Number != nil {
-            ref = seg.replace(ref, "$Number$")
-            seg.T++
-            start++
-         } else {
-            ref = seg.replace(ref, "$Time$")
-            seg.T += seg.D
-            start += seg.D
-         }
-         refs = append(refs, ref)
-      }
-   }
-   return refs
 }
 
 func (r Representation) Role() string {

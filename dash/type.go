@@ -1,5 +1,17 @@
 package dash
 
+type Adaptation struct {
+   Codecs string `xml:"codecs,attr"`
+   Content_Protection []Content_Protection `xml:"ContentProtection"`
+   Lang string `xml:"lang,attr"`
+   MIME_Type string `xml:"mimeType,attr"`
+   Representation []Representation
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   Segment_Template *Segment_Template `xml:"SegmentTemplate"`
+}
+
 type Content_Protection struct {
    PSSH string `xml:"pssh"`
    Scheme_ID_URI string `xml:"schemeIdUri,attr"`
@@ -9,12 +21,6 @@ type Presentation struct {
    Period struct {
       Adaptation_Set []Adaptation `xml:"AdaptationSet"`
    }
-}
-
-type Segment struct {
-   D int `xml:"d,attr"` // duration
-   R int `xml:"r,attr"` // repeat
-   T int `xml:"t,attr"` // time
 }
 
 func (p Presentation) Representation() []Representation {
@@ -40,20 +46,6 @@ func (p Presentation) Representation() []Representation {
    return reps
 }
 
-type Adaptation struct {
-   Codecs string `xml:"codecs,attr"`
-   Content_Protection []Content_Protection `xml:"ContentProtection"`
-   Lang string `xml:"lang,attr"`
-   MIME_Type string `xml:"mimeType,attr"`
-   Representation []Representation
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   Segment_Template *Segment_Template `xml:"SegmentTemplate"`
-}
-
-/////////////////////////////////////////////////////////////
-
 type Representation struct {
    Bandwidth int64 `xml:"bandwidth,attr"`
    Codecs string `xml:"codecs,attr"`
@@ -62,9 +54,32 @@ type Representation struct {
    ID string `xml:"id,attr"`
    MIME_Type string `xml:"mimeType,attr"`
    Width int64 `xml:"width,attr"`
-   
-   Adaptation *Adaptation
    Segment_Template *Segment_Template `xml:"SegmentTemplate"`
+   Adaptation *Adaptation // this is to get to Role
+}
+
+func (r Representation) Media() []string {
+   var refs []string
+   for _, seg := range r.Segment_Template.Segment_Timeline.S {
+      seg.T = r.Segment_Template.Start_Number
+      for seg.R >= 0 {
+         {
+            ref := r.replace_ID(r.Segment_Template.Media)
+            ref = seg.replace(ref, "$Number$")
+            refs = append(refs, ref)
+         }
+         r.Segment_Template.Start_Number++
+         seg.T++
+         seg.R--
+      }
+   }
+   return refs
+}
+
+type Segment struct {
+   D int `xml:"d,attr"` // duration
+   R int `xml:"r,attr"` // repeat
+   T int `xml:"t,attr"` // time
 }
 
 type Segment_Template struct {
@@ -73,6 +88,5 @@ type Segment_Template struct {
    Segment_Timeline struct {
       S []Segment
    } `xml:"SegmentTimeline"`
-   
-   Start_Number *int `xml:"startNumber,attr"`
+   Start_Number int `xml:"startNumber,attr"`
 }

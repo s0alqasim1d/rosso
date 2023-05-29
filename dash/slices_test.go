@@ -8,8 +8,47 @@ import (
    "testing"
 )
 
+var tests = map[string]bool{
+   "mpd/amc.mpd": false, // ascending
+   "mpd/paramount-lang.mpd": true, // random
+   "mpd/paramount-role.mpd": false, // random
+   "mpd/roku-eng.mpd": false, // descending
+}
+
+func Test_Video(t *testing.T) {
+   for name, last := range tests {
+      text, err := os.ReadFile(name)
+      if err != nil {
+         t.Fatal(err)
+      }
+      pre, err := New_Presentation(bytes.NewReader(text))
+      if err != nil {
+         t.Fatal(err)
+      }
+      fmt.Println(name)
+      reps := Filter(pre.Representation(), Video)
+      var target int
+      if last {
+         target = Last_Index_Func(reps, func(a Representation) bool {
+            return a.Bandwidth >= 999_999
+         })
+      } else {
+         target = Index_Func(reps, func(a Representation) bool {
+            return a.Bandwidth >= 999_999
+         })
+      }
+      for i, rep := range reps {
+         if i == target {
+            fmt.Print("!")
+         }
+         fmt.Println(rep)
+      }
+      fmt.Println()
+   }
+}
+
 func Test_Audio(t *testing.T) {
-   for _, name := range tests {
+   for name := range tests {
       text, err := os.ReadFile(name)
       if err != nil {
          t.Fatal(err)
@@ -42,36 +81,8 @@ func Test_Audio(t *testing.T) {
    }
 }
 
-func Test_Video(t *testing.T) {
-   for _, name := range tests {
-      text, err := os.ReadFile(name)
-      if err != nil {
-         t.Fatal(err)
-      }
-      pre, err := New_Presentation(bytes.NewReader(text))
-      if err != nil {
-         t.Fatal(err)
-      }
-      fmt.Println(name)
-      reps := Filter(pre.Representation(), Video)
-      Sort_Func(reps, func(a, b Representation) bool {
-         return a.Bandwidth < b.Bandwidth
-      })
-      target := Index_Func(reps, func(a Representation) bool {
-         return a.Bandwidth >= 999_999
-      })
-      for i, rep := range reps {
-         if i == target {
-            fmt.Print("!")
-         }
-         fmt.Println(rep)
-      }
-      fmt.Println()
-   }
-}
-
 func Test_Info(t *testing.T) {
-   for _, name := range tests {
+   for name := range tests {
       text, err := os.ReadFile(name)
       if err != nil {
          t.Fatal(err)

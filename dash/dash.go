@@ -1,33 +1,18 @@
 package dash
 
 import (
-   "2a.pages.dev/rosso/slices"
    "encoding/xml"
    "io"
    "strconv"
    "strings"
 )
 
-func (r Represents) Sort(f func(a, b Represent) bool) {
-   slices.Sort_Func(r, f)
-}
-
-func (r Represents) Index(f func(Represent) bool) int {
-   return slices.Index_Func(r, f)
-}
-
-func (r Represents) Filter(f func(Represent) bool) Represents {
-   return slices.Filter(r, f)
-}
-
-type Represents []Represent
-
 type Adaptation struct {
    Codecs string `xml:"codecs,attr"`
    Content_Protection []Content_Protection `xml:"ContentProtection"`
    Lang string `xml:"lang,attr"`
    MIME_Type string `xml:"mimeType,attr"`
-   Representation Represents
+   Representation []Represent
    Role *struct {
       Value string `xml:"value,attr"`
    }
@@ -45,8 +30,8 @@ type Presentation struct {
    }
 }
 
-func (p Presentation) Represents() Represents {
-   var reps Represents
+func (p Presentation) Represents() []Represent {
+   var reps []Represent
    for i, ada := range p.Period.Adaptation_Set {
       for _, rep := range ada.Representation {
          rep.Adaptation = &p.Period.Adaptation_Set[i]

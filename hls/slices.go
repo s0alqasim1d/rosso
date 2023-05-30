@@ -1,22 +1,11 @@
 package hls
 
 import (
-   "2a.pages.dev/rosso/slices"
    "strconv"
    "strings"
 )
 
-type Media []Medium
-
-func (m Media) Filter(f func(Medium) bool) Media {
-   return slices.Filter(m, f)
-}
-
-func (m Media) Index(f func(Medium) bool) int {
-   return slices.Index_Func(m, f)
-}
-
-type Medium struct {
+type Media struct {
    Group_ID string
    Type string
    Name string
@@ -24,7 +13,7 @@ type Medium struct {
    Raw_URI string
 }
 
-func (m Medium) String() string {
+func (m Media) String() string {
    var b strings.Builder
    b.WriteString("group ID: ")
    b.WriteString(m.Group_ID)
@@ -65,18 +54,4 @@ func (m Stream) String() string {
       b = append(b, m.Audio...)
    }
    return string(b)
-}
-
-type Streams []Stream
-
-func (s Streams) Filter(f func(Stream) bool) Streams {
-   return slices.Filter(s, f)
-}
-
-func (s Streams) Index(f func(Stream) bool) int {
-   return slices.Index_Func(s, f)
-}
-
-func (s Streams) Sort(f func(a, b Stream) bool) {
-   slices.Sort_Func(s, f)
 }

@@ -71,11 +71,11 @@ func (s Segment) IV() ([]byte, error) {
    return hex.DecodeString(strings.TrimPrefix(up, "0X"))
 }
 
-func (Medium) Ext() string {
+func (Media) Ext() string {
    return ".m4a"
 }
 
-func (m Medium) URI() string {
+func (m Media) URI() string {
    return m.Raw_URI
 }
 
@@ -96,7 +96,7 @@ func (s Scanner) Master() (*Master, error) {
       switch {
       // rfc-editor.org/rfc/rfc8216#section-4.3.4.1
       case strings.HasPrefix(line, "#EXT-X-MEDIA:"):
-         var med Medium
+         var med Media
          for s.Scan() != scanner.EOF {
             switch s.TokenText() {
             case "CHARACTERISTICS":
@@ -152,7 +152,7 @@ func (s Scanner) Master() (*Master, error) {
          }
          s.line.Scan()
          str.Raw_URI = s.line.TokenText()
-         mas.Streams = append(mas.Streams, str)
+         mas.Stream = append(mas.Stream, str)
       }
    }
    return &mas, nil
@@ -164,8 +164,8 @@ type Mixed interface {
 }
 
 type Master struct {
-   Media Media
-   Streams Streams
+   Media []Media
+   Stream []Stream
 }
 
 type Block struct {

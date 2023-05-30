@@ -14,7 +14,7 @@ func Filter[T any](s []T, f func(T) bool) []T {
 }
 
 // github.com/golang/exp/blob/2e198f4/slices/slices.go
-func Index_Func[T any](s []T, f func(T) bool) int {
+func Index[T any](s []T, f func(T) bool) int {
    for i, value := range s {
       if f(value) {
          return i
@@ -24,7 +24,7 @@ func Index_Func[T any](s []T, f func(T) bool) int {
 }
 
 // github.com/golang/exp/blob/2e198f4/slices/sort.go
-func Sort_Func[T any](s []T, less func(a, b T) bool) {
+func Sort[T any](s []T, less func(a, b T) bool) {
    sort.Slice(s, func(i, j int) bool {
       return less(s[i], s[j])
    })

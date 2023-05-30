@@ -1,43 +1,13 @@
 package dash
 
 import (
+   "2a.pages.dev/rosso/slices"
    "bytes"
    "fmt"
    "os"
    "strings"
    "testing"
 )
-
-// true if sorted
-var tests = map[string]bool{
-   "mpd/amc.mpd": false,
-   "mpd/paramount.mpd": false,
-   "mpd/roku.mpd": true,
-}
-
-func Test_Info(t *testing.T) {
-   for name := range tests {
-      text, err := os.ReadFile(name)
-      if err != nil {
-         t.Fatal(err)
-      }
-      pre, err := New_Presentation(bytes.NewReader(text))
-      if err != nil {
-         t.Fatal(err)
-      }
-      fmt.Println(name)
-      reps := pre.Represents().Filter(func(r Represent) bool {
-         return Audio(r) || Video(r)
-      })
-      for i, rep := range reps {
-         if i >= 1 {
-            fmt.Println()
-         }
-         fmt.Println(rep)
-      }
-      fmt.Println()
-   }
-}
 
 func Test_Audio(t *testing.T) {
    for name := range tests {
@@ -49,8 +19,8 @@ func Test_Audio(t *testing.T) {
       if err != nil {
          t.Fatal(err)
       }
-      reps := pre.Represents().Filter(Audio)
-      target := reps.Index(func(r Represent) bool {
+      reps := slices.Filter(pre.Represents(), Audio)
+      target := slices.Index(reps, func(r Represent) bool {
          if strings.HasPrefix(r.Adaptation.Lang, "en") {
             if strings.Contains(r.Codecs, "mp4a.") {
                return r.Role() != "description"
@@ -80,13 +50,13 @@ func Test_Video(t *testing.T) {
          t.Fatal(err)
       }
       fmt.Println(name)
-      reps := pre.Represents().Filter(Video)
+      reps := slices.Filter(pre.Represents(), Video)
       if !sorted {
-         reps.Sort(func(a, b Represent) bool {
+         slices.Sort(reps, func(a, b Represent) bool {
             return b.Bandwidth < a.Bandwidth
          })
       }
-      target := reps.Index(func(a Represent) bool {
+      target := slices.Index(reps, func(a Represent) bool {
          return a.Bandwidth <= 9_000_000
       })
       for i, rep := range reps {
@@ -98,3 +68,35 @@ func Test_Video(t *testing.T) {
       fmt.Println()
    }
 }
+
+// true if sorted
+var tests = map[string]bool{
+   "mpd/amc.mpd": false,
+   "mpd/paramount.mpd": false,
+   "mpd/roku.mpd": true,
+}
+
+func Test_Info(t *testing.T) {
+   for name := range tests {
+      text, err := os.ReadFile(name)
+      if err != nil {
+         t.Fatal(err)
+      }
+      pre, err := New_Presentation(bytes.NewReader(text))
+      if err != nil {
+         t.Fatal(err)
+      }
+      fmt.Println(name)
+      reps := slices.Filter(pre.Represents(), func(r Represent) bool {
+         return Audio(r) || Video(r)
+      })
+      for i, rep := range reps {
+         if i >= 1 {
+            fmt.Println()
+         }
+         fmt.Println(rep)
+      }
+      fmt.Println()
+   }
+}
+

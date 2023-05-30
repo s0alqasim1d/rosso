@@ -9,30 +9,6 @@ import (
    "testing"
 )
 
-func Test_Media(t *testing.T) {
-   for name := range master_tests {
-      text, err := reverse(name)
-      if err != nil {
-         t.Fatal(err)
-      }
-      master, err := New_Scanner(bytes.NewReader(text)).Master()
-      if err != nil {
-         t.Fatal(err)
-      }
-      target := slices.Index(master.Media, func(m Media) bool {
-         return m.Name == "English"
-      })
-      fmt.Println(name)
-      for i, media := range master.Media {
-         if i == target {
-            fmt.Print("!")
-         }
-         fmt.Println(media)
-      }
-      fmt.Println()
-   }
-}
-
 func Test_Stream(t *testing.T) {
    for name, sorted := range master_tests {
       text, err := reverse(name)
@@ -44,11 +20,11 @@ func Test_Stream(t *testing.T) {
          t.Fatal(err)
       }
       if !sorted {
-         master.Stream.Sort(func(a, b Stream) bool {
+         slices.Sort(master.Stream, func(a, b Stream) bool {
             return b.Bandwidth < a.Bandwidth
          })
       }
-      target := master.Stream.Index(func(a Stream) bool {
+      target := slices.Index(master.Stream, func(a Stream) bool {
          return a.Bandwidth <= 9_000_000
       })
       fmt.Println(name)
@@ -105,6 +81,30 @@ func Test_Info(t *testing.T) {
             fmt.Println()
          }
          fmt.Println(value)
+      }
+      fmt.Println()
+   }
+}
+
+func Test_Media(t *testing.T) {
+   for name := range master_tests {
+      text, err := reverse(name)
+      if err != nil {
+         t.Fatal(err)
+      }
+      master, err := New_Scanner(bytes.NewReader(text)).Master()
+      if err != nil {
+         t.Fatal(err)
+      }
+      target := slices.Index(master.Media, func(m Media) bool {
+         return m.Name == "English"
+      })
+      fmt.Println(name)
+      for i, media := range master.Media {
+         if i == target {
+            fmt.Print("!")
+         }
+         fmt.Println(media)
       }
       fmt.Println()
    }

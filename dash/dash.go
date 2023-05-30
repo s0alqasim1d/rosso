@@ -12,10 +12,6 @@ func (r Represents) Sort(f func(a, b Represent) bool) {
    slices.Sort_Func(r, f)
 }
 
-func (r Represents) Last_Index(f func(Represent) bool) int {
-   return slices.Last_Index_Func(r, f)
-}
-
 func (r Represents) Index(f func(Represent) bool) int {
    return slices.Index_Func(r, f)
 }

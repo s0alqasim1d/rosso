@@ -77,10 +77,6 @@ func (s Streams) Index(f func(Stream) bool) int {
    return slices.Index_Func(s, f)
 }
 
-func (s Streams) Last_Index(f func(Stream) bool) int {
-   return slices.Last_Index_Func(s, f)
-}
-
 func (s Streams) Sort(f func(a, b Stream) bool) {
    slices.Sort_Func(s, f)
 }

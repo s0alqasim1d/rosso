@@ -23,18 +23,6 @@ func Index_Func[T any](s []T, f func(T) bool) int {
    return -1
 }
 
-// github.com/golang/go/blob/go1.20.4/src/strings/strings.go
-func Last_Index_Func[T any](s []T, f func(T) bool) int {
-   i := len(s) - 1
-   for i >= 0 {
-      if f(s[i]) {
-         return i
-      }
-      i--
-   }
-   return -1
-}
-
 // github.com/golang/exp/blob/2e198f4/slices/sort.go
 func Sort_Func[T any](s []T, less func(a, b T) bool) {
    sort.Slice(s, func(i, j int) bool {

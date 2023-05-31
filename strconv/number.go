@@ -2,6 +2,17 @@ package strconv
 
 import "strconv"
 
+func (n Number) Rate(dst []byte) []byte {
+   units := []unit_measure{
+      {1, " byte/s"},
+      {1e-3, " kilobyte/s"},
+      {1e-6, " megabyte/s"},
+      {1e-9, " gigabyte/s"},
+      {1e-12, " terabyte/s"},
+   }
+   return n.scale(dst, units)
+}
+
 func (n Number) label(dst []byte, unit unit_measure) []byte {
    var prec int
    if unit.factor != 1 {
@@ -46,17 +57,6 @@ func (n Number) Cardinal(dst []byte) []byte {
 func (n Number) Percent(dst []byte) []byte {
    unit := unit_measure{100, "%"}
    return n.label(dst, unit)
-}
-
-func (n Number) Rate(dst []byte) []byte {
-   units := []unit_measure{
-      {1, " byte/s"},
-      {1e-3, " kilobyte/s"},
-      {1e-6, " megabyte/s"},
-      {1e-9, " gigabyte/s"},
-      {1e-12, " terabyte/s"},
-   }
-   return n.scale(dst, units)
 }
 
 func (n Number) Size(dst []byte) []byte {

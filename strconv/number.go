@@ -2,48 +2,28 @@ package strconv
 
 import "strconv"
 
-func (n Number) Rate(dst []byte) []byte {
-   units := []unit_measure{
-      {1, " byte/s"},
-      {1e-3, " kilobyte/s"},
-      {1e-6, " megabyte/s"},
-      {1e-9, " gigabyte/s"},
-      {1e-12, " terabyte/s"},
-   }
-   return n.scale(dst, units)
-}
-
-func (n Number) label(dst []byte, unit unit_measure) []byte {
+func label(value float64, unit unit_measure) string {
    var prec int
    if unit.factor != 1 {
       prec = 2
+      value *= unit.factor
    }
-   unit.factor *= float64(n)
-   dst = strconv.AppendFloat(dst, unit.factor, 'f', prec, 64)
-   return append(dst, unit.name...)
+   return strconv.FormatFloat(value, 'f', prec, 64) + unit.name
 }
 
-func (n Number) scale(dst []byte, units []unit_measure) []byte {
+func scale(value float64, units []unit_measure) string {
    var unit unit_measure
    for _, unit = range units {
-      if unit.factor * float64(n) < 1000 {
+      if unit.factor * value < 1000 {
          break
       }
    }
-   return n.label(dst, unit)
+   return label(value, unit)
 }
 
-type Number float64
+type Cardinal float64
 
-func New_Number[T Ordered](value T) Number {
-   return Number(value)
-}
-
-func Ratio[T, U Ordered](num T, den U) Number {
-   return Number(num) / Number(den)
-}
-
-func (n Number) Cardinal(dst []byte) []byte {
+func (c Cardinal) String() string {
    units := []unit_measure{
       {1, ""},
       {1e-3, " thousand"},
@@ -51,15 +31,32 @@ func (n Number) Cardinal(dst []byte) []byte {
       {1e-9, " billion"},
       {1e-12, " trillion"},
    }
-   return n.scale(dst, units)
+   return scale(float64(c), units)
 }
 
-func (n Number) Percent(dst []byte) []byte {
+type Percent float64
+
+func (p Percent) String() string {
    unit := unit_measure{100, "%"}
-   return n.label(dst, unit)
+   return label(float64(p), unit)
 }
 
-func (n Number) Size(dst []byte) []byte {
+type Rate float64
+
+func (r Rate) String() string {
+   units := []unit_measure{
+      {1, " byte/s"},
+      {1e-3, " kilobyte/s"},
+      {1e-6, " megabyte/s"},
+      {1e-9, " gigabyte/s"},
+      {1e-12, " terabyte/s"},
+   }
+   return scale(float64(r), units)
+}
+
+type Size float64
+
+func (s Size) String() string {
    units := []unit_measure{
       {1, " byte"},
       {1e-3, " kilobyte"},
@@ -67,13 +64,7 @@ func (n Number) Size(dst []byte) []byte {
       {1e-9, " gigabyte"},
       {1e-12, " terabyte"},
    }
-   return n.scale(dst, units)
-}
-
-type Ordered interface {
-   ~float32 | ~float64 |
-   ~int | ~int8 | ~int16 | ~int32 | ~int64 |
-   ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr
+   return scale(float64(s), units)
 }
 
 type unit_measure struct {

@@ -1,35 +1,30 @@
 package strconv
 
-import "testing"
+import (
+   "fmt"
+   "testing"
+)
 
-func Test_Append(t *testing.T) {
-   var b []byte
-   b = New_Number(123).Cardinal(nil)
-   if s := string(b); s != "123" {
+func Test_String(t *testing.T) {
+   if s := fmt.Sprint(Cardinal(123)); s != "123" {
       t.Fatal(s)
    }
-   b = New_Number(1234).Cardinal(nil)
-   if s := string(b); s != "1.23 thousand" {
+   if s := fmt.Sprint(Cardinal(1234)); s != "1.23 thousand" {
       t.Fatal(s)
    }
-   b = New_Number(123).Size(nil)
-   if s := string(b); s != "123 byte" {
+   if s := fmt.Sprint(Size(123)); s != "123 byte" {
       t.Fatal(s)
    }
-   b = New_Number(1234).Size(nil)
-   if s := string(b); s != "1.23 kilobyte" {
+   if s := fmt.Sprint(Size(1234)); s != "1.23 kilobyte" {
       t.Fatal(s)
    }
-   b = Ratio(1234, 10).Rate(nil)
-   if s := string(b); s != "123 byte/s" {
+   if s := fmt.Sprint(1234/Rate(10)); s != "123 byte/s" {
       t.Fatal(s)
    }
-   b = Ratio(12345, 10).Rate(nil)
-   if s := string(b); s != "1.23 kilobyte/s" {
+   if s := fmt.Sprint(12345/Rate(10)); s != "1.23 kilobyte/s" {
       t.Fatal(s)
    }
-   b = Ratio(1234, 10000).Percent(nil)
-   if s := string(b); s != "12.34%" {
+   if s := fmt.Sprint(Percent(1234)/10000); s != "12.34%" {
       t.Fatal(s)
    }
 }

@@ -2,15 +2,69 @@ package http
 
 import (
    "2a.pages.dev/rosso/strconv"
+   "bytes"
    "fmt"
    "io"
    "net/http"
    "net/http/httputil"
-   "os"
+   "net/url"
    "strings"
-   "time"
 )
 
+type Request struct {
+   *http.Request
+}
+
+func Get(ref *url.URL) *Request {
+   return New_Request(http.MethodGet, ref)
+}
+
+func Get_Parse(ref string) (*Request, error) {
+   href, err := url.Parse(ref)
+   if err != nil {
+      return nil, err
+   }
+   return New_Request(http.MethodGet, href), nil
+}
+
+func New_Request(method string, ref *url.URL) *Request {
+   req := http.Request{
+      Header: make(http.Header),
+      Method: method,
+      ProtoMajor: 1,
+      ProtoMinor: 1,
+      URL: ref,
+   }
+   return &Request{&req}
+}
+
+func Patch(ref *url.URL) *Request {
+   return New_Request(http.MethodPatch, ref)
+}
+
+func Post(ref *url.URL) *Request {
+   return New_Request(http.MethodPost, ref)
+}
+
+func Post_Parse(ref string) (*Request, error) {
+   href, err := url.Parse(ref)
+   if err != nil {
+      return nil, err
+   }
+   return New_Request(http.MethodPost, href), nil
+}
+
+func (r Request) Body_Bytes(b []byte) {
+   body := bytes.NewReader(b)
+   r.Body = io.NopCloser(body)
+   r.ContentLength = body.Size()
+}
+
+func (r Request) Body_String(s string) {
+   body := strings.NewReader(s)
+   r.Body = io.NopCloser(body)
+   r.ContentLength = body.Size()
+}
 const StatusFound = http.StatusFound
 
 type Client struct {
@@ -66,53 +120,5 @@ func (c Client) Get(ref string) (*Response, error) {
 type Cookie = http.Cookie
 
 type Header = http.Header
-
-type Progress struct {
-   bytes int64
-   bytes_read int64
-   bytes_written int
-   chunks int
-   chunks_read int64
-   lap time.Time
-   total time.Time
-   w io.Writer
-}
-
-func Progress_Bytes(dst io.Writer, bytes int64) *Progress {
-   return &Progress{w: dst, bytes: bytes}
-}
-
-func Progress_Chunks(dst io.Writer, chunks int) *Progress {
-   return &Progress{w: dst, chunks: chunks}
-}
-
-func (p *Progress) Add_Chunk(bytes int64) {
-   p.bytes_read += bytes
-   p.chunks_read += 1
-   p.bytes = int64(p.chunks) * p.bytes_read / p.chunks_read
-}
-
-func (p *Progress) Write(data []byte) (int, error) {
-   if p.total.IsZero() {
-      p.total = time.Now()
-      p.lap = time.Now()
-   }
-   lap := time.Since(p.lap)
-   if lap >= time.Second {
-      total := time.Since(p.total).Seconds()
-      var b []byte
-      b = strconv.Ratio(p.bytes_written, p.bytes).Percent(b)
-      b = append(b, "   "...)
-      b = strconv.New_Number(p.bytes_written).Size(b)
-      b = append(b, "   "...)
-      b = strconv.Ratio(p.bytes_written, total).Rate(b)
-      b = append(b, '\n')
-      os.Stderr.Write(b)
-      p.lap = p.lap.Add(lap)
-   }
-   write, err := p.w.Write(data)
-   p.bytes_written += write
-   return write, err
-}
 
 type Response = http.Response

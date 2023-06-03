@@ -20,8 +20,8 @@ func Test_Stream(t *testing.T) {
          t.Fatal(err)
       }
       if !sorted {
-         slices.Sort(master.Stream, func(a, b Stream) bool {
-            return b.Bandwidth < a.Bandwidth
+         slices.Sort(master.Stream, func(a, b Stream) int {
+            return int(b.Bandwidth - a.Bandwidth)
          })
       }
       target := slices.Index(master.Stream, func(a Stream) bool {

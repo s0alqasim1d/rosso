@@ -1,53 +1,32 @@
 package dash
 
 import (
-   "strconv"
+   "fmt"
    "strings"
 )
 
 func (r Represent) String() string {
-   var b []byte
-   b = append(b, "ID: "...)
-   b = append(b, r.ID...)
+   var s []string
    if r.Width >= 1 {
-      b = append(b, "\nwidth: "...)
-      b = strconv.AppendInt(b, r.Width, 10)
+      s = append(s, fmt.Sprint("width: ", r.Width))
    }
    if r.Height >= 1 {
-      b = append(b, "\nheight: "...)
-      b = strconv.AppendInt(b, r.Height, 10)
+      s = append(s, fmt.Sprint("height: ", r.Height))
    }
    if r.Bandwidth >= 1 {
-      b = append(b, "\nbandwidth: "...)
-      b = strconv.AppendInt(b, r.Bandwidth, 10)
+      s = append(s, fmt.Sprint("bandwidth: ", r.Bandwidth))
    }
    if r.Codecs != "" {
-      b = append(b, "\ncodecs: "...)
-      b = append(b, r.Codecs...)
+      s = append(s, "codecs: " + r.Codecs)
    }
-   b = append(b, "\ntype: "...)
-   b = append(b, r.MIME_Type...)
+   s = append(s, "type: " + r.MIME_Type)
    if r.Adaptation.Role != nil {
-      b = append(b, "\nrole: "...)
-      b = append(b, r.Adaptation.Role.Value...)
+      s = append(s, "role: " + r.Adaptation.Role.Value)
    }
    if r.Adaptation.Lang != "" {
-      b = append(b, "\nlanguage: "...)
-      b = append(b, r.Adaptation.Lang...)
+      s = append(s, "language: " + r.Adaptation.Lang)
    }
-   return string(b)
-}
-
-type Represent struct {
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   Codecs string `xml:"codecs,attr"`
-   Content_Protection []Content_Protection `xml:"ContentProtection"`
-   Height int64 `xml:"height,attr"`
-   ID string `xml:"id,attr"`
-   MIME_Type string `xml:"mimeType,attr"`
-   Width int64 `xml:"width,attr"`
-   Segment_Template *Segment_Template `xml:"SegmentTemplate"`
-   Adaptation *Adaptation // this is to get to Role
+   return strings.Join(s, "\n")
 }
 
 func (r Represent) Media() []string {
@@ -66,16 +45,6 @@ func (r Represent) Media() []string {
       }
    }
    return refs
-}
-
-func (r Represent) Ext() string {
-   switch {
-   case Audio(r):
-      return ".m4a"
-   case Video(r):
-      return ".m4v"
-   }
-   return ""
 }
 
 func (r Represent) Initialization() string {
@@ -100,4 +69,40 @@ func (r Represent) Widevine() *Content_Protection {
 
 func (r Represent) replace_ID(ref string) string {
    return strings.Replace(ref, "$RepresentationID$", r.ID, 1)
+}
+
+type Represent struct {
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   Codecs string `xml:"codecs,attr"`
+   Content_Protection []Content_Protection `xml:"ContentProtection"`
+   Height int64 `xml:"height,attr"`
+   ID string `xml:"id,attr"`
+   MIME_Type string `xml:"mimeType,attr"`
+   Width int64 `xml:"width,attr"`
+   Segment_Template *Segment_Template `xml:"SegmentTemplate"`
+   Adaptation *Adaptation // this is to get to Role
+}
+
+func Audio(r Represent) bool {
+   return r.MIME_Type == "audio/mp4"
+}
+
+func Video(r Represent) bool {
+   return r.MIME_Type == "video/mp4"
+}
+
+func (r Represent) Ext() string {
+   switch {
+   case Audio(r):
+      return ".m4a"
+   case Video(r):
+      return ".m4v"
+   }
+   return ""
+}
+
+func Not[E any](fn func(E) bool) func(E) bool {
+   return func(value E) bool {
+      return !fn(value)
+   }
 }

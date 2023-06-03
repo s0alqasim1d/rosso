@@ -7,6 +7,21 @@ import (
    "strings"
 )
 
+func New_Presentation(r io.Reader) (*Presentation, error) {
+   pre := new(Presentation)
+   err := xml.NewDecoder(r).Decode(pre)
+   if err != nil {
+      return nil, err
+   }
+   return pre, nil
+}
+
+type Presentation struct {
+   Period struct {
+      Adaptation_Set []Adaptation `xml:"AdaptationSet"`
+   }
+}
+
 type Adaptation struct {
    Codecs string `xml:"codecs,attr"`
    Content_Protection []Content_Protection `xml:"ContentProtection"`
@@ -22,12 +37,6 @@ type Adaptation struct {
 type Content_Protection struct {
    PSSH string `xml:"pssh"`
    Scheme_ID_URI string `xml:"schemeIdUri,attr"`
-}
-
-type Presentation struct {
-   Period struct {
-      Adaptation_Set []Adaptation `xml:"AdaptationSet"`
-   }
 }
 
 func (p Presentation) Represents() []Represent {
@@ -53,10 +62,8 @@ func (p Presentation) Represents() []Represent {
    return reps
 }
 
-type Segment struct {
-   D int `xml:"d,attr"` // duration
-   R int `xml:"r,attr"` // repeat
-   T int `xml:"t,attr"` // time
+func (s Segment) replace(ref, old string) string {
+   return strings.Replace(ref, old, strconv.Itoa(s.T), 1)
 }
 
 type Segment_Template struct {
@@ -68,23 +75,8 @@ type Segment_Template struct {
    Start_Number int `xml:"startNumber,attr"`
 }
 
-func Audio(r Represent) bool {
-   return r.MIME_Type == "audio/mp4"
-}
-
-func Video(r Represent) bool {
-   return r.MIME_Type == "video/mp4"
-}
-
-func New_Presentation(r io.Reader) (*Presentation, error) {
-   pre := new(Presentation)
-   err := xml.NewDecoder(r).Decode(pre)
-   if err != nil {
-      return nil, err
-   }
-   return pre, nil
-}
-
-func (s Segment) replace(ref, old string) string {
-   return strings.Replace(ref, old, strconv.Itoa(s.T), 1)
+type Segment struct {
+   D int `xml:"d,attr"` // duration
+   R int `xml:"r,attr"` // repeat
+   T int `xml:"t,attr"` // time
 }

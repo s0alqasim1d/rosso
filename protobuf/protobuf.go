@@ -2,6 +2,7 @@ package protobuf
 
 import (
    "2a.pages.dev/rosso/strconv"
+   "fmt"
    "google.golang.org/protobuf/encoding/protowire"
 )
 
@@ -222,7 +223,7 @@ func (t type_error) Error() string {
    }
    var b []byte
    b = append(b, "field "...)
-   b = strconv.AppendInt(b, int64(t.Number), 10)
+   b = fmt.Append(b, t.Number)
    b = append(b, " is "...)
    b = append(b, get_type(t.lvalue)...)
    b = append(b, ", not "...)

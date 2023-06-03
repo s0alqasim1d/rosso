@@ -4,16 +4,9 @@ import (
    "encoding/hex"
    "errors"
    "unicode/utf8"
-   "strconv"
 )
 
 const escape_character = '~'
-
-var (
-   AppendInt = strconv.AppendInt
-   AppendUint = strconv.AppendUint
-   Quote = strconv.Quote
-)
 
 var error_escape = errors.New("invalid printable escape")
 

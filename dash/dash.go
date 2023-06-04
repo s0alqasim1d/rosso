@@ -11,6 +11,19 @@ import (
    "strings"
 )
 
+func (a *Adaptation_Set) UnmarshalText(text []byte) error {
+   var b Adaptation_Set
+   err := xml.Unmarshal(text, &b)
+   if err != nil {
+      return err
+   }
+   for _, rep := range b.Representation {
+      rep.Adaptation_Set = &b
+   }
+   *a = b
+   return nil
+}
+
 type Adaptation_Set struct {
    Content_Protection []Content_Protection `xml:"ContentProtection"`
    Lang string `xml:"lang,attr"`
@@ -31,6 +44,7 @@ type Representation struct {
    MIME_Type string `xml:"mimeType,attr"`
    Width int64 `xml:"width,attr"`
    Segment_Template *Segment_Template `xml:"SegmentTemplate"`
+   Adaptation_Set *Adaptation_Set
 }
 
 type Content_Protection struct {

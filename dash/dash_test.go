@@ -23,7 +23,7 @@ func Test_Media(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   for _, ref := range reps[0].Media() {
+   for _, ref := range reps[0].Segment_Template.Replace() {
       req, err := http.NewRequest("", ref, nil)
       if err != nil {
          t.Fatal(err)

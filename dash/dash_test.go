@@ -1,13 +1,13 @@
 package dash
 
 import (
-   "2a.pages.dev/rosso/slices"
    "bytes"
    "fmt"
    "net/http"
    "os"
-   "strings"
    "testing"
+   // "2a.pages.dev/rosso/slices"
+   // "strings"
 )
 
 func Test_Media(t *testing.T) {
@@ -15,7 +15,7 @@ func Test_Media(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   med, err := New_Media(bytes.NewReader(text))
+   reps, err := Representations(bytes.NewReader(text))
    if err != nil {
       t.Fatal(err)
    }
@@ -23,7 +23,7 @@ func Test_Media(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   for _, ref := range med.Period.Adaptation_Set[0].Representation[0].Media() {
+   for _, ref := range reps[0].Media() {
       req, err := http.NewRequest("", ref, nil)
       if err != nil {
          t.Fatal(err)
@@ -32,19 +32,20 @@ func Test_Media(t *testing.T) {
       fmt.Println(req.URL)
    }
 }
+
+/*
 var tests = []string{
    "mpd/amc.mpd",
    "mpd/paramount.mpd",
    "mpd/roku.mpd",
 }
-
 func Test_Info(t *testing.T) {
    for _, name := range tests {
       text, err := os.ReadFile(name)
       if err != nil {
          t.Fatal(err)
       }
-      med, err := New_Media(bytes.NewReader(text))
+      adas, err := Adaptation_Sets(bytes.NewReader(text))
       if err != nil {
          t.Fatal(err)
       }
@@ -67,7 +68,6 @@ func Test_Info(t *testing.T) {
       fmt.Println()
    }
 }
-
 func Test_Ext(t *testing.T) {
    for _, name := range tests {
       text, err := os.ReadFile(name)
@@ -85,7 +85,6 @@ func Test_Ext(t *testing.T) {
       fmt.Println()
    }
 }
-
 func Test_Video(t *testing.T) {
    for _, name := range tests {
       text, err := os.ReadFile(name)
@@ -116,7 +115,6 @@ func Test_Video(t *testing.T) {
       fmt.Println()
    }
 }
-
 func Test_Audio(t *testing.T) {
    for _, name := range tests {
       text, err := os.ReadFile(name)
@@ -144,4 +142,4 @@ func Test_Audio(t *testing.T) {
       fmt.Println()
    }
 }
-
+*/

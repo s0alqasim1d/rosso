@@ -1,7 +1,3 @@
-// these values can be under AdaptationSet or Representation:
-// - ContentProtection
-// - SegmentTemplate
-// - mimeType
 package dash
 
 import (
@@ -11,63 +7,31 @@ import (
    "strings"
 )
 
-func (a *Adaptation_Set) UnmarshalText(text []byte) error {
-   var b Adaptation_Set
-   err := xml.Unmarshal(text, &b)
-   if err != nil {
-      return err
+func Audio(r Representation) bool {
+   return *r.MIME_Type == "audio/mp4"
+}
+
+func Video(r Representation) bool {
+   return *r.MIME_Type == "video/mp4"
+}
+
+func (r Representation) Ext() string {
+   switch {
+   case Audio(r):
+      return ".m4a"
+   case Video(r):
+      return ".m4v"
    }
-   for _, rep := range b.Representation {
-      rep.Adaptation_Set = &b
+   return ""
+}
+
+func Not[E any](fn func(E) bool) func(E) bool {
+   return func(value E) bool {
+      return !fn(value)
    }
-   *a = b
-   return nil
 }
 
-type Adaptation_Set struct {
-   Content_Protection []Content_Protection `xml:"ContentProtection"`
-   Lang string `xml:"lang,attr"`
-   MIME_Type string `xml:"mimeType,attr"`
-   Representation []Representation
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   Segment_Template *Segment_Template `xml:"SegmentTemplate"`
-}
-
-type Representation struct {
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   Codecs string `xml:"codecs,attr"`
-   Content_Protection []Content_Protection `xml:"ContentProtection"`
-   Height int64 `xml:"height,attr"`
-   ID string `xml:"id,attr"`
-   MIME_Type string `xml:"mimeType,attr"`
-   Width int64 `xml:"width,attr"`
-   Segment_Template *Segment_Template `xml:"SegmentTemplate"`
-   Adaptation_Set *Adaptation_Set
-}
-
-type Content_Protection struct {
-   PSSH string `xml:"pssh"`
-   Scheme_ID_URI string `xml:"schemeIdUri,attr"`
-}
-
-type Segment struct {
-   D int `xml:"d,attr"` // duration
-   R int `xml:"r,attr"` // repeat
-   T int `xml:"t,attr"` // time
-}
-
-type Segment_Template struct {
-   Initialization string `xml:"initialization,attr"`
-   Media string `xml:"media,attr"`
-   Segment_Timeline struct {
-      S []Segment
-   } `xml:"SegmentTimeline"`
-   Start_Number int `xml:"startNumber,attr"`
-}
-
-func (r Representation) Text(a Adaptation_Set) string {
+func (r Representation) String() string {
    var s []string
    if r.Width >= 1 {
       s = append(s, fmt.Sprint("width: ", r.Width))
@@ -81,27 +45,14 @@ func (r Representation) Text(a Adaptation_Set) string {
    if r.Codecs != "" {
       s = append(s, "codecs: " + r.Codecs)
    }
-   s = append(s, "type: " + r.MIME_Type)
-   if a.Role != nil {
-      s = append(s, "role: " + a.Role.Value)
+   s = append(s, "type: " + *r.MIME_Type)
+   if r.Adaptation_Set.Role != nil {
+      s = append(s, "role: " + r.Adaptation_Set.Role.Value)
    }
-   if a.Lang != "" {
-      s = append(s, "language: " + a.Lang)
+   if r.Adaptation_Set.Lang != "" {
+      s = append(s, "language: " + r.Adaptation_Set.Lang)
    }
    return strings.Join(s, "\n")
-}
-
-func Adaptation_Sets(r io.Reader) ([]Adaptation_Set, error) {
-   var s struct {
-      Period struct {
-         Adaptation_Set []Adaptation_Set `xml:"AdaptationSet"`
-      }
-   }
-   err := xml.NewDecoder(r).Decode(&s)
-   if err != nil {
-      return nil, err
-   }
-   return s.Period.Adaptation_Set, nil
 }
 
 func (r Representation) replace_ID(ref string) string {
@@ -143,27 +94,88 @@ func (r Representation) Widevine() *Content_Protection {
    return nil
 }
 
-func Audio(r Representation) bool {
-   return r.MIME_Type == "audio/mp4"
-}
-
-func Video(r Representation) bool {
-   return r.MIME_Type == "video/mp4"
-}
-
-func (r Representation) Ext() string {
-   switch {
-   case Audio(r):
-      return ".m4a"
-   case Video(r):
-      return ".m4v"
+// amcplus.com
+type Adaptation_Set struct {
+   Content_Protection []Content_Protection `xml:"ContentProtection"`
+   Representation []Representation
+   Role *struct {
+      Value string `xml:"value,attr"`
    }
-   return ""
+   Segment_Template *Segment_Template `xml:"SegmentTemplate"`
+   Lang string `xml:"lang,attr"`
+   MIME_Type string `xml:"mimeType,attr"`
 }
 
-func Not[E any](fn func(E) bool) func(E) bool {
-   return func(value E) bool {
-      return !fn(value)
+type Representation struct {
+   // roku.com
+   Adaptation_Set *Adaptation_Set
+   // roku.com
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   // roku.com
+   Codecs string `xml:"codecs,attr"`
+   // roku.com
+   Content_Protection []Content_Protection `xml:"ContentProtection"`
+   // roku.com
+   Height int64 `xml:"height,attr"`
+   // roku.com
+   ID string `xml:"id,attr"`
+   // paramountplus.com
+   MIME_Type *string `xml:"mimeType,attr"`
+   // roku.com
+   Segment_Template *Segment_Template `xml:"SegmentTemplate"`
+   // roku.com
+   Width int64 `xml:"width,attr"`
+}
+
+func Representations(r io.Reader) ([]Representation, error) {
+   var s struct {
+      Period struct {
+         Adaptation_Set []Adaptation_Set `xml:"AdaptationSet"`
+      }
    }
+   err := xml.NewDecoder(r).Decode(&s)
+   if err != nil {
+      return nil, err
+   }
+   var reps []Representation
+   for i, ada := range s.Period.Adaptation_Set {
+      for _, rep := range ada.Representation {
+         // ContentProtection can be under AdaptationSet or Representation
+         if rep.Content_Protection == nil {
+            rep.Content_Protection = ada.Content_Protection
+         }
+         // SegmentTemplate can be under AdaptationSet or Representation
+         if rep.Segment_Template == nil {
+            rep.Segment_Template = ada.Segment_Template
+         }
+         // mimeType can be under AdaptationSet or Representation
+         if rep.MIME_Type == nil {
+            rep.MIME_Type = &s.Period.Adaptation_Set[i].MIME_Type
+         }
+         reps = append(reps, rep)
+      }
+   }
+   return reps, nil
+}
+// roku.com
+type Content_Protection struct {
+   PSSH string `xml:"pssh"`
+   Scheme_ID_URI string `xml:"schemeIdUri,attr"`
 }
 
+// roku.com
+type Segment struct {
+   D int `xml:"d,attr"` // duration
+   R int `xml:"r,attr"` // repeat
+   T int `xml:"t,attr"` // time
+}
+
+// roku.com
+type Segment_Template struct {
+   Initialization string `xml:"initialization,attr"`
+   Media string `xml:"media,attr"`
+   Segment_Timeline struct {
+      S []Segment
+   } `xml:"SegmentTimeline"`
+   Start_Number int `xml:"startNumber,attr"`
+}

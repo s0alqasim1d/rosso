@@ -10,7 +10,7 @@ import (
 )
 
 func Test_Stream(t *testing.T) {
-   for name, sorted := range master_tests {
+   for _, name := range master_tests {
       text, err := reverse(name)
       if err != nil {
          t.Fatal(err)
@@ -19,11 +19,9 @@ func Test_Stream(t *testing.T) {
       if err != nil {
          t.Fatal(err)
       }
-      if !sorted {
-         slices.Sort(master.Stream, func(a, b Stream) int {
-            return int(b.Bandwidth - a.Bandwidth)
-         })
-      }
+      slices.Sort(master.Stream, func(a, b Stream) bool {
+         return b.Bandwidth < a.Bandwidth
+      })
       target := slices.Index(master.Stream, func(a Stream) bool {
          return a.Bandwidth <= 9_000_000
       })
@@ -40,6 +38,7 @@ func Test_Stream(t *testing.T) {
       fmt.Println()
    }
 }
+
 func reverse(name string) ([]byte, error) {
    text, err := os.ReadFile(name)
    if err != nil {
@@ -51,15 +50,14 @@ func reverse(name string) ([]byte, error) {
    return text, nil
 }
 
-// true if sorted
-var master_tests = map[string]bool{
-   "m3u8/cbc-master.m3u8.txt": false,
-   "m3u8/nbc-master.m3u8.txt": false,
-   "m3u8/roku-master.m3u8.txt": true,
+var master_tests = []string{
+   "m3u8/cbc-master.m3u8.txt",
+   "m3u8/nbc-master.m3u8.txt",
+   "m3u8/roku-master.m3u8.txt",
 }
 
 func Test_Info(t *testing.T) {
-   for name := range master_tests {
+   for _, name := range master_tests {
       text, err := reverse(name)
       if err != nil {
          t.Fatal(err)
@@ -87,7 +85,7 @@ func Test_Info(t *testing.T) {
 }
 
 func Test_Media(t *testing.T) {
-   for name := range master_tests {
+   for _, name := range master_tests {
       text, err := reverse(name)
       if err != nil {
          t.Fatal(err)

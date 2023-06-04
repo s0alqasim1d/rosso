@@ -4,9 +4,38 @@ import (
    "encoding/xml"
    "fmt"
    "io"
-   "strconv"
    "strings"
 )
+
+func (r Represent) replace_ID(ref string) string {
+   return strings.Replace(ref, "$RepresentationID$", r.ID, 1)
+}
+
+func (r Represent) Initialization() string {
+   return r.replace_ID(r.Segment_Template.Initialization)
+}
+
+func (r Represent) Media() []string {
+   var refs []string
+   for _, seg := range r.Segment_Template.Segment_Timeline.S {
+      seg.T = r.Segment_Template.Start_Number
+      for seg.R >= 0 {
+         {
+            ref := r.replace_ID(r.Segment_Template.Media)
+            ref = seg.replace(ref, "$Number$")
+            refs = append(refs, ref)
+         }
+         r.Segment_Template.Start_Number++
+         seg.T++
+         seg.R--
+      }
+   }
+   return refs
+}
+
+func (s Segment) replace(ref, old string) string {
+   return strings.Replace(ref, old, fmt.Sprint(s.T), 1)
+}
 
 func (r Represent) String() string {
    var s []string
@@ -32,18 +61,6 @@ func (r Represent) String() string {
    return strings.Join(s, "\n")
 }
 
-type Adaptation struct {
-   Codecs string `xml:"codecs,attr"`
-   Content_Protection []Content_Protection `xml:"ContentProtection"`
-   Lang string `xml:"lang,attr"`
-   MIME_Type string `xml:"mimeType,attr"`
-   Representation []Represent
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   Segment_Template *Segment_Template `xml:"SegmentTemplate"`
-}
-
 func (r Represent) Widevine() *Content_Protection {
    for _, c := range r.Content_Protection {
       if c.Scheme_ID_URI == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
@@ -51,22 +68,6 @@ func (r Represent) Widevine() *Content_Protection {
       }
    }
    return nil
-}
-
-func (r Represent) replace_ID(ref string) string {
-   return strings.Replace(ref, "$RepresentationID$", r.ID, 1)
-}
-
-type Represent struct {
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   Codecs string `xml:"codecs,attr"`
-   Content_Protection []Content_Protection `xml:"ContentProtection"`
-   Height int64 `xml:"height,attr"`
-   ID string `xml:"id,attr"`
-   MIME_Type string `xml:"mimeType,attr"`
-   Width int64 `xml:"width,attr"`
-   Segment_Template *Segment_Template `xml:"SegmentTemplate"`
-   Adaptation *Adaptation // this is to get to Lang
 }
 
 func Audio(r Represent) bool {
@@ -92,31 +93,21 @@ func Not[E any](fn func(E) bool) func(E) bool {
       return !fn(value)
    }
 }
-func New_Presentation(r io.Reader) (*Presentation, error) {
-   pre := new(Presentation)
-   err := xml.NewDecoder(r).Decode(pre)
+
+func New_Media(r io.Reader) (*Media, error) {
+   med := new(Media)
+   err := xml.NewDecoder(r).Decode(med)
    if err != nil {
       return nil, err
    }
-   return pre, nil
+   return med, nil
 }
 
-type Presentation struct {
-   Period struct {
-      Adaptation_Set []Adaptation `xml:"AdaptationSet"`
-   }
-}
-
-type Content_Protection struct {
-   PSSH string `xml:"pssh"`
-   Scheme_ID_URI string `xml:"schemeIdUri,attr"`
-}
-
-func (p Presentation) Represents() []Represent {
+func (m Media) Represents() []Represent {
    var reps []Represent
-   for i, ada := range p.Period.Adaptation_Set {
+   for i, ada := range m.Period.Adaptation_Set {
       for _, rep := range ada.Representation {
-         rep.Adaptation = &p.Period.Adaptation_Set[i]
+         rep.Adaptation = &m.Period.Adaptation_Set[i]
          if rep.Codecs == "" {
             rep.Codecs = ada.Codecs
          }
@@ -135,8 +126,21 @@ func (p Presentation) Represents() []Represent {
    return reps
 }
 
-func (s Segment) replace(ref, old string) string {
-   return strings.Replace(ref, old, strconv.Itoa(s.T), 1)
+type Media struct {
+   Period struct {
+      Adaptation_Set []Adaptation `xml:"AdaptationSet"`
+   }
+}
+
+type Content_Protection struct {
+   PSSH string `xml:"pssh"`
+   Scheme_ID_URI string `xml:"schemeIdUri,attr"`
+}
+
+type Segment struct {
+   D int `xml:"d,attr"` // duration
+   R int `xml:"r,attr"` // repeat
+   T int `xml:"t,attr"` // time
 }
 
 type Segment_Template struct {
@@ -148,8 +152,30 @@ type Segment_Template struct {
    Start_Number int `xml:"startNumber,attr"`
 }
 
-type Segment struct {
-   D int `xml:"d,attr"` // duration
-   R int `xml:"r,attr"` // repeat
-   T int `xml:"t,attr"` // time
+// SegmentTemplate is sometimes under AdaptationSet and
+// sometimes under Representation
+type Adaptation struct {
+   Codecs string `xml:"codecs,attr"`
+   Content_Protection []Content_Protection `xml:"ContentProtection"`
+   Lang string `xml:"lang,attr"`
+   MIME_Type string `xml:"mimeType,attr"`
+   Representation []Represent
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   Segment_Template *Segment_Template `xml:"SegmentTemplate"`
+}
+
+// SegmentTemplate is sometimes under AdaptationSet and
+// sometimes under Representation
+type Represent struct {
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   Codecs string `xml:"codecs,attr"`
+   Content_Protection []Content_Protection `xml:"ContentProtection"`
+   Height int64 `xml:"height,attr"`
+   ID string `xml:"id,attr"`
+   MIME_Type string `xml:"mimeType,attr"`
+   Width int64 `xml:"width,attr"`
+   Segment_Template *Segment_Template `xml:"SegmentTemplate"`
+   Adaptation *Adaptation // this is to get to Lang and Role
 }

@@ -4,11 +4,34 @@ import (
    "2a.pages.dev/rosso/slices"
    "bytes"
    "fmt"
+   "net/http"
    "os"
    "strings"
    "testing"
 )
 
+func Test_Media(t *testing.T) {
+   text, err := os.ReadFile("mpd/roku.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   med, err := New_Media(bytes.NewReader(text))
+   if err != nil {
+      t.Fatal(err)
+   }
+   base, err := http.NewRequest("", "http://example.com", nil)
+   if err != nil {
+      t.Fatal(err)
+   }
+   for _, ref := range med.Period.Adaptation_Set[0].Representation[0].Media() {
+      req, err := http.NewRequest("", ref, nil)
+      if err != nil {
+         t.Fatal(err)
+      }
+      req.URL = base.URL.ResolveReference(req.URL)
+      fmt.Println(req.URL)
+   }
+}
 var tests = []string{
    "mpd/amc.mpd",
    "mpd/paramount.mpd",
@@ -21,12 +44,12 @@ func Test_Info(t *testing.T) {
       if err != nil {
          t.Fatal(err)
       }
-      pre, err := New_Presentation(bytes.NewReader(text))
+      med, err := New_Media(bytes.NewReader(text))
       if err != nil {
          t.Fatal(err)
       }
       fmt.Println(name)
-      reps := slices.Delete(pre.Represents(), func(r Represent) bool {
+      reps := slices.Delete(med.Represents(), func(r Represent) bool {
          if Audio(r) {
             return false
          }
@@ -51,12 +74,12 @@ func Test_Ext(t *testing.T) {
       if err != nil {
          t.Fatal(err)
       }
-      pre, err := New_Presentation(bytes.NewReader(text))
+      med, err := New_Media(bytes.NewReader(text))
       if err != nil {
          t.Fatal(err)
       }
       fmt.Println(name)
-      for _, rep := range pre.Represents() {
+      for _, rep := range med.Represents() {
          fmt.Printf("%q\n", rep.Ext())
       }
       fmt.Println()
@@ -69,12 +92,12 @@ func Test_Video(t *testing.T) {
       if err != nil {
          t.Fatal(err)
       }
-      pre, err := New_Presentation(bytes.NewReader(text))
+      med, err := New_Media(bytes.NewReader(text))
       if err != nil {
          t.Fatal(err)
       }
       fmt.Println(name)
-      reps := slices.Delete(pre.Represents(), Not(Video))
+      reps := slices.Delete(med.Represents(), Not(Video))
       slices.Sort(reps, func(a, b Represent) int {
          return int(b.Bandwidth - a.Bandwidth)
       })
@@ -100,11 +123,11 @@ func Test_Audio(t *testing.T) {
       if err != nil {
          t.Fatal(err)
       }
-      pre, err := New_Presentation(bytes.NewReader(text))
+      med, err := New_Media(bytes.NewReader(text))
       if err != nil {
          t.Fatal(err)
       }
-      reps := slices.Delete(pre.Represents(), Not(Audio))
+      reps := slices.Delete(med.Represents(), Not(Audio))
       target := slices.Index(reps, func(r Represent) bool {
          if strings.HasPrefix(r.Adaptation.Lang, "en") {
             return strings.Contains(r.Codecs, "mp4a.")

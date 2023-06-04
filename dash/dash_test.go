@@ -23,7 +23,7 @@ func Test_Media(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   for _, ref := range reps[0].Segment_Template.Replace() {
+   for _, ref := range reps[0].Segment_Template.Get_Media() {
       req, err := http.NewRequest("", ref, nil)
       if err != nil {
          t.Fatal(err)
@@ -33,12 +33,31 @@ func Test_Media(t *testing.T) {
    }
 }
 
-/*
 var tests = []string{
    "mpd/amc.mpd",
    "mpd/paramount.mpd",
    "mpd/roku.mpd",
 }
+
+func Test_Ext(t *testing.T) {
+   for _, name := range tests {
+      text, err := os.ReadFile(name)
+      if err != nil {
+         t.Fatal(err)
+      }
+      reps, err := Representations(bytes.NewReader(text))
+      if err != nil {
+         t.Fatal(err)
+      }
+      fmt.Println(name)
+      for _, rep := range reps {
+         fmt.Printf("%q\n", rep.Ext())
+      }
+      fmt.Println()
+   }
+}
+
+/*
 func Test_Info(t *testing.T) {
    for _, name := range tests {
       text, err := os.ReadFile(name)
@@ -68,23 +87,7 @@ func Test_Info(t *testing.T) {
       fmt.Println()
    }
 }
-func Test_Ext(t *testing.T) {
-   for _, name := range tests {
-      text, err := os.ReadFile(name)
-      if err != nil {
-         t.Fatal(err)
-      }
-      med, err := New_Media(bytes.NewReader(text))
-      if err != nil {
-         t.Fatal(err)
-      }
-      fmt.Println(name)
-      for _, rep := range med.Represents() {
-         fmt.Printf("%q\n", rep.Ext())
-      }
-      fmt.Println()
-   }
-}
+
 func Test_Video(t *testing.T) {
    for _, name := range tests {
       text, err := os.ReadFile(name)
@@ -115,6 +118,7 @@ func Test_Video(t *testing.T) {
       fmt.Println()
    }
 }
+
 func Test_Audio(t *testing.T) {
    for _, name := range tests {
       text, err := os.ReadFile(name)

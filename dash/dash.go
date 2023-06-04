@@ -7,6 +7,30 @@ import (
    "strings"
 )
 
+func (r Representation) String() string {
+   var s []string
+   if r.Width >= 1 {
+      s = append(s, "width: " + strconv.Itoa(r.Width))
+   }
+   if r.Height >= 1 {
+      s = append(s, "height: " + strconv.Itoa(r.Height))
+   }
+   if r.Bandwidth >= 1 {
+      s = append(s, "bandwidth: " + strconv.Itoa(r.Bandwidth))
+   }
+   if r.Codecs != "" {
+      s = append(s, "codecs: " + r.Codecs)
+   }
+   s = append(s, "type: " + *r.MIME_Type)
+   if r.Adaptation_Set.Role != nil {
+      s = append(s, "role: " + r.Adaptation_Set.Role.Value)
+   }
+   if r.Adaptation_Set.Lang != "" {
+      s = append(s, "language: " + r.Adaptation_Set.Lang)
+   }
+   return strings.Join(s, "\n")
+}
+
 func Representations(r io.Reader) ([]Representation, error) {
    var s struct {
       Period struct {
@@ -78,6 +102,30 @@ func replace(s *string, in, out string) {
    *s = strings.Replace(*s, in, out, 1)
 }
 
+func (r Representation) Ext() string {
+   switch {
+   case Audio(r):
+      return ".m4a"
+   case Video(r):
+      return ".m4v"
+   }
+   return ""
+}
+
+func (r Representation) Widevine() string {
+   for _, c := range r.Content_Protection {
+      if c.Scheme_ID_URI == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
+         return c.PSSH
+      }
+   }
+   return ""
+}
+
+func (s Segment_Template) Get_Initialization() string {
+   replace(&s.Initialization, "$RepresentationID$", s.Representation.ID)
+   return s.Initialization
+}
+
 // amcplus.com
 type Adaptation_Set struct {
    Content_Protection []Content_Protection `xml:"ContentProtection"`
@@ -117,49 +165,6 @@ type Representation struct {
    Adaptation_Set *Adaptation_Set
 }
 
-func (r Representation) Ext() string {
-   switch {
-   case Audio(r):
-      return ".m4a"
-   case Video(r):
-      return ".m4v"
-   }
-   return ""
-}
-
-func (r Representation) String() string {
-   var s []string
-   if r.Width >= 1 {
-      s = append(s, "width: " + strconv.Itoa(r.Width))
-   }
-   if r.Height >= 1 {
-      s = append(s, "height: " + strconv.Itoa(r.Height))
-   }
-   if r.Bandwidth >= 1 {
-      s = append(s, "bandwidth: " + strconv.Itoa(r.Bandwidth))
-   }
-   if r.Codecs != "" {
-      s = append(s, "codecs: " + r.Codecs)
-   }
-   s = append(s, "type: " + *r.MIME_Type)
-   if r.Adaptation_Set.Role != nil {
-      s = append(s, "role: " + r.Adaptation_Set.Role.Value)
-   }
-   if r.Adaptation_Set.Lang != "" {
-      s = append(s, "language: " + r.Adaptation_Set.Lang)
-   }
-   return strings.Join(s, "\n")
-}
-
-func (r Representation) Widevine() string {
-   for _, c := range r.Content_Protection {
-      if c.Scheme_ID_URI == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         return c.PSSH
-      }
-   }
-   return ""
-}
-
 // roku.com
 type Segment struct {
    D int `xml:"d,attr"` // duration
@@ -176,9 +181,4 @@ type Segment_Template struct {
       S []Segment
    } `xml:"SegmentTimeline"`
    Start_Number int `xml:"startNumber,attr"`
-}
-
-func (s Segment_Template) Get_Initialization() string {
-   replace(&s.Initialization, "$RepresentationID$", s.Representation.ID)
-   return s.Initialization
 }

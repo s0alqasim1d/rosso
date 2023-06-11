@@ -3,29 +3,13 @@ package strconv
 import (
    "encoding/hex"
    "errors"
+   "unicode"
    "unicode/utf8"
 )
 
 const escape_character = '~'
 
 var error_escape = errors.New("invalid printable escape")
-
-// mimesniff.spec.whatwg.org#binary-data-byte
-func Binary_Data(b byte) bool {
-   if b <= 0x08 {
-      return true
-   }
-   if b == 0x0B {
-      return true
-   }
-   if b >= 0x0E && b <= 0x1A {
-      return true
-   }
-   if b >= 0x1C && b <= 0x1F {
-      return true
-   }
-   return false
-}
 
 func Encode(src []byte) string {
    var dst []byte
@@ -67,12 +51,23 @@ func decode(src string) ([]byte, error) {
    return dst, nil
 }
 
-func decode_rune(p []byte) (rune, int) {
-   if len(p) >= 1 {
-      b := p[0]
-      if b == escape_character || Binary_Data(b) {
-         return utf8.RuneError, 1
-      }
+// I originally used:
+// mimesniff.spec.whatwg.org#binary-data-byte
+// but it fails with:
+// fileformat.info/info/unicode/char/1b
+func Binary_Data(r rune) bool {
+   if unicode.IsSpace(r) {
+      return false
    }
-   return utf8.DecodeRune(p)
+   // we could also use unicode.IsGraphic or unicode.IsPrint, but they call
+   // unicode.In
+   return unicode.IsControl(r)
+}
+
+func decode_rune(p []byte) (rune, int) {
+   r, size := utf8.DecodeRune(p)
+   if r == escape_character || Binary_Data(r) {
+      return utf8.RuneError, 1
+   }
+   return r, size
 }

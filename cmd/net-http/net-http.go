@@ -19,15 +19,14 @@ import (
 
 // go.dev/ref/spec#String_literals
 func can_backquote(s string) bool {
-   for i := range s {
-      b := s[i]
-      if b == '\r' {
+   for _, r := range s {
+      if r == '\r' {
          return false
       }
-      if b == '`' {
+      if r == '`' {
          return false
       }
-      if strconv.Binary_Data(b) {
+      if strconv.Binary_Data(r) {
          return false
       }
    }

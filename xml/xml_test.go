@@ -7,9 +7,9 @@ import (
 )
 
 func Test_Cut(t *testing.T) {
-   data, sep := []byte(dirty), []byte(" world\n")
+   text, sep := []byte(dirty), []byte(" world\n")
    var rating regional_rating
-   err := Cut(data, sep, &rating)
+   err := Cut(text, sep, &rating)
    if err != nil {
       t.Fatal(err)
    }
@@ -17,9 +17,9 @@ func Test_Cut(t *testing.T) {
 }
 
 func Test_Before(t *testing.T) {
-   data, sep := []byte(dirty), []byte("<regionalRating>")
+   text, sep := []byte(dirty), []byte("<regionalRating>")
    var rating regional_rating
-   err := Cut_Before(data, sep, &rating)
+   err := Cut_Before(text, sep, &rating)
    if err != nil {
       t.Fatal(err)
    }

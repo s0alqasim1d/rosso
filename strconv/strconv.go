@@ -56,6 +56,7 @@ func decode(src string) ([]byte, error) {
 // but it fails with:
 // fileformat.info/info/unicode/char/1b
 func Binary_Data(r rune) bool {
+   // this needs to be first because newline is a control character
    if unicode.IsSpace(r) {
       return false
    }

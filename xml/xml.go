@@ -7,30 +7,30 @@ import (
 )
 
 // github.com/golang/go/blob/go1.20.3/src/encoding/xml/xml.go
-func decode(data, sep []byte, v any, before bool) error {
-   _, data, found := bytes.Cut(data, sep)
+func decode(text, sep []byte, v any, before bool) error {
+   _, text, found := bytes.Cut(text, sep)
    if !found {
       return io.EOF
    }
    if before {
-      data = append(sep, data...)
+      text = append(sep, text...)
    }
-   dec := new_decoder(data)
+   dec := new_decoder(text)
    for {
       _, err := dec.Token()
       if err != nil {
-         data = data[:dec.InputOffset()]
-         return new_decoder(data).Decode(v)
+         text = text[:dec.InputOffset()]
+         return new_decoder(text).Decode(v)
       }
    }
 }
 
-func Cut(data, sep []byte, v any) error {
-   return decode(data, sep, v, false)
+func Cut(text, sep []byte, v any) error {
+   return decode(text, sep, v, false)
 }
 
-func Cut_Before(data, sep []byte, v any) error {
-   return decode(data, sep, v, true)
+func Cut_Before(text, sep []byte, v any) error {
+   return decode(text, sep, v, true)
 }
 
 func Indent(dst io.Writer, src io.Reader, prefix, indent string) error {
@@ -45,9 +45,9 @@ func Indent(dst io.Writer, src io.Reader, prefix, indent string) error {
       if err != nil {
          return err
       }
-      data, ok := token.(xml.CharData)
+      text, ok := token.(xml.CharData)
       if ok {
-         token = xml.CharData(bytes.TrimSpace(data))
+         token = xml.CharData(bytes.TrimSpace(text))
       }
       if err := enc.EncodeToken(token); err != nil {
          return err
@@ -55,8 +55,8 @@ func Indent(dst io.Writer, src io.Reader, prefix, indent string) error {
    }
 }
 
-func new_decoder(data []byte) *xml.Decoder {
-   dec := xml.NewDecoder(bytes.NewReader(data))
+func new_decoder(text []byte) *xml.Decoder {
+   dec := xml.NewDecoder(bytes.NewReader(text))
    dec.AutoClose = xml.HTMLAutoClose
    dec.Strict = false
    return dec

@@ -28,16 +28,16 @@ func (f flags) indent_xml() error {
 }
 
 func (f flags) indent_json() error {
-   // value
-   data, err := os.ReadFile(f.input)
-   if err != nil {
-      return err
-   }
    var value any
-   if err := json.Unmarshal(data, &value); err != nil {
-      return err
+   {
+      b, err := os.ReadFile(f.input)
+      if err != nil {
+         return err
+      }
+      if err := json.Unmarshal(b, &value); err != nil {
+         return err
+      }
    }
-   // out
    out := os.Stdout
    if f.output != "" {
       out, err = os.Create(f.output)

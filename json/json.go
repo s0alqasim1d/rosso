@@ -7,20 +7,20 @@ import (
 )
 
 // github.com/golang/go/blob/go1.20.3/src/encoding/xml/xml.go
-func unmarshal(data, sep []byte, v any, before bool) error {
-   _, data, found := bytes.Cut(data, sep)
+func unmarshal(text, sep []byte, v any, before bool) error {
+   _, text, found := bytes.Cut(text, sep)
    if !found {
       return io.EOF
    }
    if before {
-      data = append(sep, data...)
+      text = append(sep, text...)
    }
-   dec := NewDecoder(bytes.NewReader(data))
+   dec := NewDecoder(bytes.NewReader(text))
    for {
       _, err := dec.Token()
       if err != nil {
-         data = data[:dec.InputOffset()]
-         return json.Unmarshal(data, v)
+         text = text[:dec.InputOffset()]
+         return json.Unmarshal(text, v)
       }
    }
 }
@@ -30,10 +30,10 @@ var (
    NewDecoder = json.NewDecoder
 )
 
-func Cut(data, sep []byte, v any) error {
-   return unmarshal(data, sep, v, false)
+func Cut(text, sep []byte, v any) error {
+   return unmarshal(text, sep, v, false)
 }
 
-func Cut_Before(data, sep []byte, v any) error {
-   return unmarshal(data, sep, v, true)
+func Cut_Before(text, sep []byte, v any) error {
+   return unmarshal(text, sep, v, true)
 }

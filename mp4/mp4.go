@@ -5,19 +5,10 @@ import (
    "io"
 )
 
-type Decrypt struct {
-   sinf map[uint32]*mp4.SinfBox
-   write io.Writer
-}
+// progress is only needed after Init, so keep io.Writer out of the type
+type Decrypt map[uint32]*mp4.SinfBox
 
-func New_Decrypt(w io.Writer) Decrypt {
-   var dec Decrypt
-   dec.sinf = make(map[uint32]*mp4.SinfBox)
-   dec.write = w
-   return dec
-}
-
-func (d *Decrypt) Init(r io.Reader) error {
+func (d Decrypt) Init(r io.Reader, w io.Writer) error {
    file, err := mp4.DecodeFile(r)
    if err != nil {
       return err
@@ -27,9 +18,9 @@ func (d *Decrypt) Init(r io.Reader) error {
       for _, child := range trak.Mdia.Minf.Stbl.Stsd.Children {
          switch box := child.(type) {
          case *mp4.AudioSampleEntryBox:
-            d.sinf[trak.Tkhd.TrackID], err = box.RemoveEncryption()
+            d[trak.Tkhd.TrackID], err = box.RemoveEncryption()
          case *mp4.VisualSampleEntryBox:
-            d.sinf[trak.Tkhd.TrackID], err = box.RemoveEncryption()
+            d[trak.Tkhd.TrackID], err = box.RemoveEncryption()
          }
          if err != nil {
             return err
@@ -38,10 +29,10 @@ func (d *Decrypt) Init(r io.Reader) error {
    }
    // need for Mozilla Firefox
    file.Init.Moov.RemovePsshs()
-   return file.Init.Encode(d.write)
+   return file.Init.Encode(w)
 }
 
-func (d Decrypt) Segment(r io.Reader, key []byte) error {
+func (d Decrypt) Segment(r io.Reader, w io.Writer, key []byte) error {
    file, err := mp4.DecodeFile(r)
    if err != nil {
       return err
@@ -50,7 +41,7 @@ func (d Decrypt) Segment(r io.Reader, key []byte) error {
       for _, frag := range seg.Fragments {
          var removed uint64
          for _, traf := range frag.Moof.Trafs {
-            sinf := d.sinf[traf.Tfhd.TrackID]
+            sinf := d[traf.Tfhd.TrackID]
             if sinf == nil {
                continue
             }
@@ -95,7 +86,7 @@ func (d Decrypt) Segment(r io.Reader, key []byte) error {
       }
       // fix jerk between fragments
       seg.Sidx = nil
-      err := seg.Encode(d.write)
+      err := seg.Encode(w)
       if err != nil {
          return err
       }

@@ -1,5 +1,9 @@
+2a.pages.dev/mech v1.4.9 h1:sZ3JrGadJ9JbLIKwE5fQmEiugu9Up94KgavQZsMfPJY=
+2a.pages.dev/mech v1.4.9/go.mod h1:lttvgnJGRF7CcDZpZI44S1c5upB1m7ibdQq7V1yDUgM=
 github.com/Eyevinn/mp4ff v0.35.0 h1:umuXXGwBRiuJ671aUbM4Z/ZCt4FNdoLg5PC4clmxVO8=
 github.com/Eyevinn/mp4ff v0.35.0/go.mod h1:w/6GSa5ghZ1VavzJK6McQ2/flx8mKtcrKDr11SsEweA=
+github.com/chmike/cmac-go v1.1.0 h1:aF73ZAEx9N2WdQc93DOJ2fMsBDAGqUtuenjMJMb3kEI=
+github.com/chmike/cmac-go v1.1.0/go.mod h1:wcIN7NRqWSKGuORzd4dReBkoBDE9ZBqfyTVxyDxGeUw=
 github.com/go-test/deep v1.0.8 h1:TDsG77qcSprGbC6vTN8OuXp5g+J+b5Pcguhf7Zt61VM=
 github.com/go-test/deep v1.0.8/go.mod h1:5C2ZWiW0ErCdrYzpqxLbTX7MG14M9iiw8DgHncVwcsE=
 github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=

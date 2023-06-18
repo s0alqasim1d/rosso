@@ -37,13 +37,13 @@ func Test_Decrypt(t *testing.T) {
       if err != nil {
          t.Fatal(err)
       }
-      var dec_data bytes.Buffer
-      dec := New_Decrypt(&dec_data)
-      err = dec.Init(bytes.NewReader(enc_data))
+      dec := make(Decrypt)
+      dec_data := new(bytes.Buffer)
+      err = dec.Init(bytes.NewReader(enc_data), dec_data)
       if err != nil {
          t.Fatal(err)
       }
-      err = dec.Segment(bytes.NewReader(enc_data), key)
+      err = dec.Segment(bytes.NewReader(enc_data), dec_data, key)
       if err != nil {
          t.Fatal(err)
       }

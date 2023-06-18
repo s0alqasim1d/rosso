@@ -28,6 +28,15 @@ func (f flags) indent_xml() error {
 }
 
 func (f flags) indent_json() error {
+   file := os.Stdout
+   if f.output != "" {
+      var err error
+      file, err = os.Create(f.output)
+      if err != nil {
+         return err
+      }
+   }
+   defer file.Close()
    var value any
    {
       b, err := os.ReadFile(f.input)
@@ -38,16 +47,7 @@ func (f flags) indent_json() error {
          return err
       }
    }
-   out := os.Stdout
-   if f.output != "" {
-      out, err = os.Create(f.output)
-      if err != nil {
-         return err
-      }
-      defer out.Close()
-   }
-   // Encode
-   enc := json.NewEncoder(out)
+   enc := json.NewEncoder(file)
    enc.SetEscapeHTML(false)
    enc.SetIndent("", " ")
    return enc.Encode(value)

@@ -1,11 +1,22 @@
 package dash
 
 import (
+   "encoding/base64"
    "encoding/xml"
+   "errors"
    "io"
    "strconv"
    "strings"
 )
+
+func (r Representer) Widevine() ([]byte, error) {
+   for _, c := range r.Content_Protection {
+      if c.Scheme_ID_URI == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
+         return base64.StdEncoding.DecodeString(c.PSSH)
+      }
+   }
+   return nil, errors.New("Widevine Content Protection not found")
+}
 
 func Audio(r Representer) bool {
    return *r.MIME_Type == "audio/mp4"
@@ -130,15 +141,6 @@ func (r Representer) String() string {
       s = append(s, "language: " + r.Adaptation_Set.Lang)
    }
    return strings.Join(s, "\n")
-}
-
-func (r Representer) Widevine() string {
-   for _, c := range r.Content_Protection {
-      if c.Scheme_ID_URI == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         return c.PSSH
-      }
-   }
-   return ""
 }
 
 // roku.com
